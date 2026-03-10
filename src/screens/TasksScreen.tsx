@@ -8,7 +8,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { v4 as uuidv4 } from 'uuid';
+import { generateUUID } from '@utils/uuid';
 import { useTaskStore } from '@store/taskStore';
 import { colors } from '@theme/colors';
 import { getCompletionPercentage } from '@utils/progressHelpers';
@@ -40,7 +40,7 @@ export default function TasksScreen() {
 
   function handleAddTask(title: string, category: Category, time: string, date: string) {
     const newTask: Task = {
-      id: uuidv4(),
+      id: generateUUID(),
       title,
       category,
       time,

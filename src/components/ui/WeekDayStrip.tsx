@@ -54,7 +54,7 @@ export default function WeekDayStrip({ selectedDate, onSelectDate }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 16, gap: 6 },
+  container: { paddingHorizontal: 8, gap: 4 },
   dayCell: {
     width: 50,
     alignItems: 'center',
