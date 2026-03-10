@@ -1,31 +1,59 @@
 import { create } from 'zustand';
 import type { Reward } from '@app-types/index';
+import {
+  getRewardsByWeek,
+  insertReward,
+  claimReward as dbClaimReward,
+  unlockReward as dbUnlockReward,
+  deleteReward as dbDeleteReward,
+} from '@database/queries/rewardQueries';
 
 interface RewardStore {
   rewards: Reward[];
-  addReward: (reward: Reward) => void;
+  loadRewards: (weekStart: string) => Promise<void>;
+  addReward: (reward: Reward) => Promise<void>;
   updateReward: (id: string, updates: Partial<Reward>) => void;
-  deleteReward: (id: string) => void;
-  claimReward: (id: string) => void;
-  checkAndUnlock: (goalId: string) => void;
+  deleteReward: (id: string) => Promise<void>;
+  claimReward: (id: string) => Promise<void>;
+  checkAndUnlock: (goalId: string) => Promise<void>;
 }
 
-export const useRewardStore = create<RewardStore>((set) => ({
+export const useRewardStore = create<RewardStore>((set, get) => ({
   rewards: [],
-  addReward: (reward) => set((state) => ({ rewards: [...state.rewards, reward] })),
+  loadRewards: async (weekStart) => {
+    const rewards = await getRewardsByWeek(weekStart);
+    set({ rewards });
+  },
+  addReward: async (reward) => {
+    await insertReward(reward);
+    set((state) => ({ rewards: [...state.rewards, reward] }));
+  },
   updateReward: (id, updates) =>
     set((state) => ({ rewards: state.rewards.map((r) => (r.id === id ? { ...r, ...updates } : r)) })),
-  deleteReward: (id) => set((state) => ({ rewards: state.rewards.filter((r) => r.id !== id) })),
-  claimReward: (id) =>
+  deleteReward: async (id) => {
+    await dbDeleteReward(id);
+    set((state) => ({ rewards: state.rewards.filter((r) => r.id !== id) }));
+  },
+  claimReward: async (id) => {
+    await dbClaimReward(id);
     set((state) => ({
       rewards: state.rewards.map((r) => (r.id === id ? { ...r, isClaimed: true } : r)),
-    })),
-  checkAndUnlock: (goalId) =>
+    }));
+  },
+  checkAndUnlock: async (goalId) => {
+    const toUnlock = get().rewards.filter(
+      (r) => r.linkedGoalId === goalId && !r.isUnlocked
+    );
+    for (const r of toUnlock) {
+      await dbUnlockReward(r.id);
+    }
+    const unlockedAt = new Date().toISOString();
     set((state) => ({
       rewards: state.rewards.map((r) =>
         r.linkedGoalId === goalId && !r.isUnlocked
-          ? { ...r, isUnlocked: true, unlockedAt: new Date().toISOString() }
+          ? { ...r, isUnlocked: true, unlockedAt }
           : r
       ),
-    })),
+    }));
+  },
 }));

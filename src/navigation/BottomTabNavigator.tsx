@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import TasksScreen from '@screens/TasksScreen';
+import TasksStackNavigator from './TasksStackNavigator';
 import GoalsScreen from '@screens/GoalsScreen';
 import RewardsScreen from '@screens/RewardsScreen';
 import StatsScreen from '@screens/StatsScreen';
@@ -39,7 +39,7 @@ export default function BottomTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Tasks" component={TasksScreen} />
+      <Tab.Screen name="Tasks" component={TasksStackNavigator} />
       <Tab.Screen name="Goals" component={GoalsScreen} />
       <Tab.Screen name="Rewards" component={RewardsScreen} />
       <Tab.Screen name="Stats" component={StatsScreen} />
