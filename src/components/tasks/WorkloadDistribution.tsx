@@ -36,7 +36,7 @@ export default function WorkloadDistribution({ tasks }: Props) {
             <View key={cat} style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={[styles.catName, { color }]}>{CATEGORY_LABELS[cat]}</Text>
-                <Text style={styles.count}>{count}</Text>
+                <Text style={styles.count}>{count} tasks</Text>
               </View>
               <ProgressBar progress={progress} color={color} height={4} />
             </View>
@@ -57,11 +57,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 10,
   },
-  cards: { gap: 8 },
+  cards: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
+    width: '48.5%',
   },
   cardHeader: {
     flexDirection: 'row',

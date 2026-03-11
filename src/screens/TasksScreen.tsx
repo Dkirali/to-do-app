@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,18 +8,51 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { format, addMonths, subMonths } from 'date-fns';
 import { generateUUID } from '@utils/uuid';
 import { useTaskStore } from '@store/taskStore';
 import { colors } from '@theme/colors';
 import { getCompletionPercentage } from '@utils/progressHelpers';
-import { formatMonthYear } from '@utils/dateHelpers';
 import WeekDayStrip from '@components/ui/WeekDayStrip';
 import ProgressBar from '@components/ui/ProgressBar';
 import TaskCard from '@components/tasks/TaskCard';
 import TaskSwipeRow from '@components/tasks/TaskSwipeRow';
 import WorkloadDistribution from '@components/tasks/WorkloadDistribution';
 import QuickAddBar from '@components/tasks/QuickAddBar';
+import EditTaskModal from '@components/tasks/EditTaskModal';
 import type { Task, Category } from '@app-types/index';
+
+// ─── Weekly Progress Card ─────────────────────────────────────────────────────
+
+interface ProgressCardProps {
+  completionPct: number;
+  completedCount: number;
+  totalCount: number;
+}
+
+function WeeklyProgressCard({ completionPct, completedCount, totalCount }: ProgressCardProps) {
+  return (
+    <View style={styles.progressCard}>
+      <View style={styles.progressHeader}>
+        <View style={styles.progressHeaderLeft}>
+          <Text style={styles.progressLabel}>WEEKLY PROGRESS</Text>
+          <View style={styles.pctBadge}>
+            <Text style={styles.pctText}>{completionPct}%</Text>
+          </View>
+        </View>
+        <View style={styles.progressHeaderRight}>
+          <Text style={styles.tasksDoneLabel}>Tasks done</Text>
+          <Text style={styles.tasksDoneCount}>
+            {completedCount}/{totalCount}
+          </Text>
+        </View>
+      </View>
+      <ProgressBar progress={completionPct / 100} color={colors.primary} height={8} />
+    </View>
+  );
+}
+
+// ─── Tasks Screen ─────────────────────────────────────────────────────────────
 
 export default function TasksScreen() {
   const {
@@ -29,16 +62,43 @@ export default function TasksScreen() {
     setSelectedDate,
     setActiveTab,
     addTask,
+    updateTask,
     deleteTask,
     completeTask,
   } = useTaskStore();
 
-  const incompleteTasks = tasks.filter((t) => !t.completed);
-  const completedTasks = tasks.filter((t) => t.completed);
-  const completionPct = getCompletionPercentage(tasks);
-  const monthLabel = formatMonthYear(new Date(selectedDate + 'T12:00:00'));
+  const [displayMonth, setDisplayMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  function handleAddTask(title: string, category: Category, time: string, date: string) {
+  const dayTasks = tasks.filter((t) => t.date === selectedDate);
+  const incompleteTasks = dayTasks.filter((t) => !t.completed);
+  const completedTasks = dayTasks.filter((t) => t.completed);
+  const completionPct = getCompletionPercentage(dayTasks);
+
+  const monthLabel = format(new Date(`${displayMonth}-01T12:00:00`), 'MMMM yyyy');
+
+  function changeMonth(direction: 1 | -1) {
+    const base = new Date(`${displayMonth}-01T12:00:00`);
+    const newDate = direction === 1 ? addMonths(base, 1) : subMonths(base, 1);
+    const newMonth = format(newDate, 'yyyy-MM');
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todayMonth = format(new Date(), 'yyyy-MM');
+    setDisplayMonth(newMonth);
+    if (newMonth === todayMonth) {
+      setSelectedDate(todayStr);
+    } else {
+      setSelectedDate(format(newDate, 'yyyy-MM-01'));
+    }
+  }
+
+  function handleAddTask(
+    title: string,
+    category: Category,
+    time: string,
+    date: string,
+    priority: 'low' | 'medium' | 'high',
+    description: string
+  ) {
     const newTask: Task = {
       id: generateUUID(),
       title,
@@ -47,32 +107,14 @@ export default function TasksScreen() {
       date,
       completed: false,
       createdAt: new Date().toISOString(),
+      priority,
+      description: description || undefined,
     };
     addTask(newTask);
   }
 
-  function handleEdit(_task: Task) {
-    // TODO: open edit modal
-  }
-
-  function WeeklyProgressCard() {
-    return (
-      <View style={styles.progressCard}>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>WEEKLY PROGRESS</Text>
-          <View style={styles.pctBadge}>
-            <Text style={styles.pctText}>{completionPct}%</Text>
-          </View>
-        </View>
-        <ProgressBar progress={completionPct / 100} color={colors.primary} height={8} />
-        <View style={styles.progressFooter}>
-          <Text style={styles.tasksDoneLabel}>Tasks done</Text>
-          <Text style={styles.tasksDoneCount}>
-            {completedTasks.length}/{tasks.length}
-          </Text>
-        </View>
-      </View>
-    );
+  function handleEdit(task: Task) {
+    setEditingTask(task);
   }
 
   return (
@@ -84,18 +126,30 @@ export default function TasksScreen() {
           <Text style={styles.subheading}>Weekly Planner</Text>
         </View>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="search" size={22} color={colors.textPrimary} />
+          <TouchableOpacity style={styles.iconPill}>
+            <Ionicons name="search" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
+          <TouchableOpacity style={styles.iconPill}>
+            <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
             <View style={styles.notifDot} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Week strip */}
-      <WeekDayStrip selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+      {/* Week strip with month nav arrows */}
+      <View style={styles.stripRow}>
+        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.stripArrow}>
+          <Ionicons name="chevron-back" size={18} color={colors.textSecondary} />
+        </TouchableOpacity>
+        <WeekDayStrip
+          displayMonth={displayMonth}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.stripArrow}>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
 
       {/* Tabs */}
       <View style={styles.tabs}>
@@ -121,57 +175,75 @@ export default function TasksScreen() {
       </View>
 
       {/* Lists */}
-      {activeTab === 'all' ? (
-        <FlatList
-          data={incompleteTasks}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TaskSwipeRow task={item} onEdit={handleEdit} onDelete={deleteTask}>
+      <View style={styles.listContainer}>
+        {activeTab === 'all' ? (
+          <FlatList
+            data={incompleteTasks}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TaskSwipeRow task={item} onComplete={completeTask} onEdit={handleEdit} onDelete={deleteTask}>
+                <TaskCard
+                  task={item}
+                  onComplete={completeTask}
+                  onEdit={handleEdit}
+                  onDelete={deleteTask}
+                />
+              </TaskSwipeRow>
+            )}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <Text style={styles.emptyText}>No tasks for this day</Text>
+                <Text style={styles.emptySubtext}>Tap + to add one</Text>
+              </View>
+            }
+          />
+        ) : (
+          <FlatList
+            data={completedTasks}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={
+              dayTasks.length > 0 ? (
+                <WeeklyProgressCard
+                  completionPct={completionPct}
+                  completedCount={completedTasks.length}
+                  totalCount={dayTasks.length}
+                />
+              ) : null
+            }
+            renderItem={({ item }) => (
               <TaskCard
                 task={item}
                 onComplete={completeTask}
                 onEdit={handleEdit}
                 onDelete={deleteTask}
               />
-            </TaskSwipeRow>
-          )}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>No tasks for this day</Text>
-              <Text style={styles.emptySubtext}>Tap + to add one</Text>
-            </View>
-          }
-        />
-      ) : (
-        <FlatList
-          data={completedTasks}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={tasks.length > 0 ? <WeeklyProgressCard /> : null}
-          renderItem={({ item }) => (
-            <TaskCard
-              task={item}
-              onComplete={completeTask}
-              onEdit={handleEdit}
-              onDelete={deleteTask}
-            />
-          )}
-          ListFooterComponent={
-            completedTasks.length > 0 ? <WorkloadDistribution tasks={completedTasks} /> : null
-          }
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>No completed tasks yet</Text>
-            </View>
-          }
-        />
-      )}
+            )}
+            ListFooterComponent={
+              dayTasks.length > 0 ? <WorkloadDistribution tasks={dayTasks} /> : null
+            }
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <Text style={styles.emptyText}>No completed tasks yet</Text>
+              </View>
+            }
+          />
+        )}
+      </View>
 
       {/* Quick Add */}
       <QuickAddBar selectedDate={selectedDate} onAdd={handleAddTask} />
+
+      {/* Edit Task Modal */}
+      <EditTaskModal
+        task={editingTask}
+        visible={editingTask !== null}
+        onClose={() => setEditingTask(null)}
+        onUpdate={(id, updates) => { updateTask(id, updates); setEditingTask(null); }}
+      />
     </SafeAreaView>
   );
 }
@@ -188,8 +260,18 @@ const styles = StyleSheet.create({
   },
   heading: { fontSize: 28, fontWeight: 'bold', color: colors.textPrimary },
   subheading: { fontSize: 15, color: colors.textSecondary, marginTop: 2 },
-  headerIcons: { flexDirection: 'row', gap: 4, marginTop: 4 },
-  iconBtn: { padding: 8, position: 'relative' },
+  headerIcons: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  iconPill: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 10,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   notifDot: {
     position: 'absolute',
     top: 6,
@@ -229,6 +311,9 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   countBadgeText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  stripRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
+  stripArrow: { padding: 8 },
+  listContainer: { flex: 1 },
   list: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 },
   empty: { alignItems: 'center', paddingTop: 60 },
   emptyText: { fontSize: 17, fontWeight: '600', color: colors.textSecondary },
@@ -245,6 +330,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  progressHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressHeaderRight: {
+    alignItems: 'flex-end',
+  },
   progressLabel: {
     fontSize: 11,
     fontWeight: '700',
@@ -259,12 +352,6 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   pctText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
-  progressFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  tasksDoneLabel: { fontSize: 13, color: colors.textSecondary },
-  tasksDoneCount: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  tasksDoneLabel: { fontSize: 12, color: colors.textSecondary },
+  tasksDoneCount: { fontSize: 18, fontWeight: '700', color: colors.primary },
 });
