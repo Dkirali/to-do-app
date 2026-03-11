@@ -200,7 +200,103 @@ export default function QuickAddBar({ selectedDate, onAdd }: Props) {
             </View>
           </View>
         </View>
-      </Modal>
+      </FullWindowOverlay>
+    ) : (
+      <View style={styles.overlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={handleClose} activeOpacity={1} />
+        <View style={styles.kavWrapper}>
+          <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
+            <View style={styles.handle} />
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              automaticallyAdjustKeyboardInsets
+            >
+              <TextInput
+                style={styles.titleInput}
+                placeholder="Task title..."
+                placeholderTextColor={colors.textMuted}
+                value={title}
+                onChangeText={setTitle}
+                returnKeyType="done"
+              />
+              <View style={styles.dueDateRow}>
+                <View style={styles.calIconContainer}>
+                  <Ionicons name="calendar" size={18} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dueDateLabel}>DUE DATE</Text>
+                  <Text style={styles.dueDateValue}>{dueDateLabel}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </View>
+              <Text style={styles.sectionLabel}>CATEGORY</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoryRow}
+              >
+                {CATEGORIES.map((cat) => {
+                  const selected = cat === category;
+                  const color = categoryColor(cat);
+                  return (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.catChip,
+                        selected ? styles.catChipSelected : { borderColor: `${color}50` },
+                      ]}
+                      onPress={() => setCategory(cat)}
+                    >
+                      <View style={[styles.catDot, { backgroundColor: selected ? '#FFF' : color }]} />
+                      <Text style={[styles.catChipText, { color: selected ? '#FFF' : color }]}>
+                        {CATEGORY_LABELS[cat]}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              <Text style={styles.sectionLabel}>PRIORITY</Text>
+              <View style={styles.priorityContainer}>
+                {PRIORITIES.map((p) => (
+                  <TouchableOpacity
+                    key={p}
+                    style={[styles.priorityOption, priority === p && styles.prioritySelected]}
+                    onPress={() => setPriority(p)}
+                  >
+                    <Text style={[styles.priorityText, priority === p && styles.priorityTextSelected]}>
+                      {p.charAt(0).toUpperCase() + p.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.sectionLabel}>DESCRIPTION</Text>
+              <TextInput
+                style={styles.descInput}
+                placeholder="Add description..."
+                placeholderTextColor={colors.textMuted}
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+              <TouchableOpacity
+                style={[styles.addBtn, !title.trim() && styles.addBtnDimmed]}
+                onPress={handleSubmit}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.addBtnText}>Add Task</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleClose}>
+                <Text style={styles.cancelText}>CANCEL</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </View>
+    )}
+  </Modal>
     </>
   );
 }
