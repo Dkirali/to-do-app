@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,12 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
-  Platform,
 } from 'react-native';
-import { FullWindowOverlay } from 'react-native-screens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, isToday } from 'date-fns';
 import { colors, categoryColor } from '@theme/colors';
-import type { Category } from '@app-types/index';
+import type { Task, Category } from '@app-types/index';
 
 const CATEGORIES: Category[] = ['general', 'gym', 'work', 'study', 'health'];
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -29,189 +27,64 @@ type Priority = 'low' | 'medium' | 'high';
 const PRIORITIES: Priority[] = ['low', 'medium', 'high'];
 
 interface Props {
-  selectedDate: string;
-  onAdd: (
-    title: string,
-    category: Category,
-    time: string,
-    date: string,
-    priority: Priority,
-    description: string
-  ) => void;
+  task: Task | null;
+  visible: boolean;
+  onClose: () => void;
+  onUpdate: (id: string, updates: Partial<Task>) => void;
 }
 
-export default function QuickAddBar({ selectedDate, onAdd }: Props) {
+export default function EditTaskModal({ task, visible, onClose, onUpdate }: Props) {
   const insets = useSafeAreaInsets();
-  const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<Category>('general');
   const [time, setTime] = useState('09:00 AM');
   const [priority, setPriority] = useState<Priority>('medium');
   const [description, setDescription] = useState('');
 
-  const dateLabel = format(new Date(selectedDate + 'T12:00:00'), 'MMM d');
+  // Pre-fill form whenever the task changes
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title);
+      setCategory(task.category);
+      setTime(task.time);
+      setPriority(task.priority ?? 'medium');
+      setDescription(task.description ?? '');
+    }
+  }, [task]);
 
-  const selectedDateObj = new Date(selectedDate + 'T12:00:00');
-  const dueDateLabel = isToday(selectedDateObj)
+  if (!task) return null;
+
+  const taskDateObj = new Date(task.date + 'T12:00:00');
+  const dueDateLabel = isToday(taskDateObj)
     ? `Today, ${time}`
-    : `${format(selectedDateObj, 'MMM d')}, ${time}`;
+    : `${format(taskDateObj, 'MMM d')}, ${time}`;
 
   function handleSubmit() {
     if (!title.trim()) return;
-    onAdd(title.trim(), category, time, selectedDate, priority, description.trim());
-    resetForm();
-  }
-
-  function handleClose() {
-    resetForm();
-  }
-
-  function resetForm() {
-    setTitle('');
-    setCategory('general');
-    setTime('09:00 AM');
-    setPriority('medium');
-    setDescription('');
-    setModalVisible(false);
+    onUpdate(task!.id, {
+      title: title.trim(),
+      category,
+      time,
+      priority,
+      description: description.trim() || undefined,
+    });
   }
 
   return (
-    <>
-      <TouchableOpacity style={styles.bar} onPress={() => setModalVisible(true)} activeOpacity={0.8}>
-        <Ionicons name="checkmark-circle-outline" size={20} color={colors.textSecondary} style={styles.barIcon} />
-        <Text style={styles.placeholder}>Add a task for {dateLabel}...</Text>
-        <View style={styles.addButton}>
-          <Ionicons name="add" size={20} color="#FFF" />
-        </View>
-      </TouchableOpacity>
-
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={handleClose}
-      >
-        {Platform.OS === 'ios' ? (
-          <FullWindowOverlay>
-            <View style={styles.overlay}>
-              <TouchableOpacity style={StyleSheet.absoluteFill} onPress={handleClose} activeOpacity={1} />
-              <View style={styles.kavWrapper}>
-                <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
-              <View style={styles.handle} />
-
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                automaticallyAdjustKeyboardInsets
-              >
-                {/* Title */}
-                <TextInput
-                  style={styles.titleInput}
-                  placeholder="Task title..."
-                  placeholderTextColor={colors.textMuted}
-                  value={title}
-                  onChangeText={setTitle}
-                  returnKeyType="done"
-                />
-
-                {/* Due Date */}
-                <View style={styles.dueDateRow}>
-                  <View style={styles.calIconContainer}>
-                    <Ionicons name="calendar" size={18} color={colors.primary} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.dueDateLabel}>DUE DATE</Text>
-                    <Text style={styles.dueDateValue}>{dueDateLabel}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </View>
-
-                {/* Category */}
-                <Text style={styles.sectionLabel}>CATEGORY</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.categoryRow}
-                >
-                  {CATEGORIES.map((cat) => {
-                    const selected = cat === category;
-                    const color = categoryColor(cat);
-                    return (
-                      <TouchableOpacity
-                        key={cat}
-                        style={[
-                          styles.catChip,
-                          selected ? styles.catChipSelected : { borderColor: `${color}50` },
-                        ]}
-                        onPress={() => setCategory(cat)}
-                      >
-                        <View style={[styles.catDot, { backgroundColor: selected ? '#FFF' : color }]} />
-                        <Text style={[styles.catChipText, { color: selected ? '#FFF' : color }]}>
-                          {CATEGORY_LABELS[cat]}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-
-                {/* Priority */}
-                <Text style={styles.sectionLabel}>PRIORITY</Text>
-                <View style={styles.priorityContainer}>
-                  {PRIORITIES.map((p) => (
-                    <TouchableOpacity
-                      key={p}
-                      style={[styles.priorityOption, priority === p && styles.prioritySelected]}
-                      onPress={() => setPriority(p)}
-                    >
-                      <Text style={[styles.priorityText, priority === p && styles.priorityTextSelected]}>
-                        {p.charAt(0).toUpperCase() + p.slice(1)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* Description */}
-                <Text style={styles.sectionLabel}>DESCRIPTION</Text>
-                <TextInput
-                  style={styles.descInput}
-                  placeholder="Add description..."
-                  placeholderTextColor={colors.textMuted}
-                  value={description}
-                  onChangeText={setDescription}
-                  multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
-                />
-
-                {/* Add Task */}
-                <TouchableOpacity
-                  style={[styles.addBtn, !title.trim() && styles.addBtnDimmed]}
-                  onPress={handleSubmit}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.addBtnText}>Add Task</Text>
-                </TouchableOpacity>
-
-                {/* Cancel */}
-                <TouchableOpacity onPress={handleClose}>
-                  <Text style={styles.cancelText}>CANCEL</Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
-          </View>
-        </View>
-      </FullWindowOverlay>
-    ) : (
+    <Modal visible={visible} animationType="slide" transparent presentationStyle="overFullScreen" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={handleClose} activeOpacity={1} />
+        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+
         <View style={styles.kavWrapper}>
           <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
             <View style={styles.handle} />
+
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               automaticallyAdjustKeyboardInsets
             >
+              {/* Title */}
               <TextInput
                 style={styles.titleInput}
                 placeholder="Task title..."
@@ -220,6 +93,8 @@ export default function QuickAddBar({ selectedDate, onAdd }: Props) {
                 onChangeText={setTitle}
                 returnKeyType="done"
               />
+
+              {/* Due Date (read-only display) */}
               <View style={styles.dueDateRow}>
                 <View style={styles.calIconContainer}>
                   <Ionicons name="calendar" size={18} color={colors.primary} />
@@ -230,6 +105,8 @@ export default function QuickAddBar({ selectedDate, onAdd }: Props) {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
+
+              {/* Category */}
               <Text style={styles.sectionLabel}>CATEGORY</Text>
               <ScrollView
                 horizontal
@@ -256,6 +133,8 @@ export default function QuickAddBar({ selectedDate, onAdd }: Props) {
                   );
                 })}
               </ScrollView>
+
+              {/* Priority */}
               <Text style={styles.sectionLabel}>PRIORITY</Text>
               <View style={styles.priorityContainer}>
                 {PRIORITIES.map((p) => (
@@ -270,6 +149,8 @@ export default function QuickAddBar({ selectedDate, onAdd }: Props) {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              {/* Description */}
               <Text style={styles.sectionLabel}>DESCRIPTION</Text>
               <TextInput
                 style={styles.descInput}
@@ -281,47 +162,29 @@ export default function QuickAddBar({ selectedDate, onAdd }: Props) {
                 numberOfLines={3}
                 textAlignVertical="top"
               />
+
+              {/* Save */}
               <TouchableOpacity
-                style={[styles.addBtn, !title.trim() && styles.addBtnDimmed]}
+                style={[styles.saveBtn, !title.trim() && styles.saveBtnDimmed]}
                 onPress={handleSubmit}
                 activeOpacity={0.8}
               >
-                <Text style={styles.addBtnText}>Add Task</Text>
+                <Text style={styles.saveBtnText}>Save Changes</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleClose}>
+
+              {/* Cancel */}
+              <TouchableOpacity onPress={onClose}>
                 <Text style={styles.cancelText}>CANCEL</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
         </View>
       </View>
-    )}
-  </Modal>
-    </>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  barIcon: { marginRight: 8 },
-  placeholder: { flex: 1, fontSize: 15, color: colors.textMuted },
-  addButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   overlay: {
     position: 'absolute',
     top: 0,
@@ -460,14 +323,14 @@ const styles = StyleSheet.create({
     minHeight: 80,
     marginBottom: 20,
   },
-  addBtn: {
+  saveBtn: {
     backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  addBtnDimmed: { opacity: 0.45 },
-  addBtnText: {
+  saveBtnDimmed: { opacity: 0.45 },
+  saveBtnText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFF',

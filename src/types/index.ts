@@ -28,6 +28,8 @@ export interface Task {
   completed: boolean;
   createdAt: string;  // ISO timestamp
   completedAt?: string;
+  priority?: 'low' | 'medium' | 'high';
+  description?: string;
 }
 
 // ─── Goal ─────────────────────────────────────────────────────────────────────

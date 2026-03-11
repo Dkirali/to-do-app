@@ -1,270 +1,137 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { generateUUID } from '@utils/uuid';
-import { useTaskStore } from '@store/taskStore';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
+} from 'react-native-reanimated';
 import { colors } from '@theme/colors';
-import { getCompletionPercentage } from '@utils/progressHelpers';
-import { formatMonthYear } from '@utils/dateHelpers';
-import WeekDayStrip from '@components/ui/WeekDayStrip';
-import ProgressBar from '@components/ui/ProgressBar';
-import TaskCard from '@components/tasks/TaskCard';
-import TaskSwipeRow from '@components/tasks/TaskSwipeRow';
-import WorkloadDistribution from '@components/tasks/WorkloadDistribution';
-import QuickAddBar from '@components/tasks/QuickAddBar';
-import type { Task, Category } from '@app-types/index';
+import type { Task } from '@app-types/index';
 
-export default function TasksScreen() {
-  const {
-    tasks,
-    selectedDate,
-    activeTab,
-    setSelectedDate,
-    setActiveTab,
-    addTask,
-    deleteTask,
-    completeTask,
-  } = useTaskStore();
+interface Props {
+  task: Task;
+  children: React.ReactNode;
+  onComplete: (id: string) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (id: string) => void;
+}
 
-  const incompleteTasks = tasks.filter((t) => !t.completed);
-  const completedTasks = tasks.filter((t) => t.completed);
-  const completionPct = getCompletionPercentage(tasks);
-  const monthLabel = formatMonthYear(new Date(selectedDate + 'T12:00:00'));
+const MAX_RIGHT = 80;          // reveal complete button (right swipe)
+const COMPLETE_THRESHOLD = 60; // snap to complete reveal
+const REVEAL_THRESHOLD = -160; // reveal both edit + delete (left swipe)
+const DELETE_THRESHOLD = -250; // auto-delete on extreme left swipe
 
-  function handleAddTask(title: string, category: Category, time: string, date: string) {
-    const newTask: Task = {
-      id: generateUUID(),
-      title,
-      category,
-      time,
-      date,
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
-    addTask(newTask);
+export default function TaskSwipeRow({ task, children, onComplete, onEdit, onDelete }: Props) {
+  const translateX = useSharedValue(0);
+
+  const pan = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .onUpdate((e) => {
+      translateX.value = Math.max(REVEAL_THRESHOLD, Math.min(MAX_RIGHT, e.translationX));
+    })
+    .onEnd((e) => {
+      if (e.translationX < DELETE_THRESHOLD) {
+        // Extreme left swipe → auto-delete
+        translateX.value = withSpring(0);
+        runOnJS(onDelete)(task.id);
+      } else if (e.translationX < REVEAL_THRESHOLD) {
+        // Left swipe past threshold → snap to reveal both buttons
+        translateX.value = withSpring(REVEAL_THRESHOLD);
+      } else if (e.translationX > COMPLETE_THRESHOLD) {
+        // Right swipe past threshold → snap to reveal complete button
+        translateX.value = withSpring(MAX_RIGHT);
+      } else {
+        // Short swipe → snap back
+        translateX.value = withSpring(0);
+      }
+    });
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const leftActionsStyle = useAnimatedStyle(() => ({
+    opacity: translateX.value > 10 ? 1 : 0,
+  }));
+
+  const rightActionsStyle = useAnimatedStyle(() => ({
+    opacity: translateX.value < -10 ? 1 : 0,
+  }));
+
+  function closeRow() {
+    translateX.value = withSpring(0);
   }
 
-  function handleEdit(_task: Task) {
-    // TODO: open edit modal
-  }
-
-  function WeeklyProgressCard() {
-    return (
-      <View style={styles.progressCard}>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>WEEKLY PROGRESS</Text>
-          <View style={styles.pctBadge}>
-            <Text style={styles.pctText}>{completionPct}%</Text>
-          </View>
-        </View>
-        <ProgressBar progress={completionPct / 100} color={colors.primary} height={8} />
-        <View style={styles.progressFooter}>
-          <Text style={styles.tasksDoneLabel}>Tasks done</Text>
-          <Text style={styles.tasksDoneCount}>
-            {completedTasks.length}/{tasks.length}
-          </Text>
-        </View>
-      </View>
-    );
+  function handleComplete() {
+    closeRow();
+    runOnJS(onComplete)(task.id);
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.heading}>{monthLabel}</Text>
-          <Text style={styles.subheading}>Weekly Planner</Text>
-        </View>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="search" size={22} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Week strip */}
-      <WeekDayStrip selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('all')}>
-          <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
-            All Tasks
-          </Text>
-          {activeTab === 'all' && <View style={styles.tabUnderline} />}
+    <View style={styles.wrapper}>
+      {/* Left action — complete (green, revealed on right swipe) */}
+      <Animated.View style={[styles.leftActions, leftActionsStyle]}>
+        <TouchableOpacity style={[styles.actionBtn, styles.completeBtn]} onPress={handleComplete}>
+          <Ionicons name="checkmark" size={22} color="#FFF" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('completed')}>
-          <View style={styles.tabRow}>
-            <Text style={[styles.tabText, activeTab === 'completed' && styles.tabTextActive]}>
-              Completed
-            </Text>
-            {completedTasks.length > 0 && (
-              <View style={styles.countBadge}>
-                <Text style={styles.countBadgeText}>{completedTasks.length}</Text>
-              </View>
-            )}
-          </View>
-          {activeTab === 'completed' && <View style={styles.tabUnderline} />}
+      </Animated.View>
+
+      {/* Right actions — edit + delete (revealed on left swipe) */}
+      <Animated.View style={[styles.rightActions, rightActionsStyle]}>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.editBtn]}
+          onPress={() => { closeRow(); onEdit(task); }}
+        >
+          <Ionicons name="pencil" size={18} color="#FFF" />
         </TouchableOpacity>
-      </View>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.deleteBtn]}
+          onPress={() => { closeRow(); onDelete(task.id); }}
+        >
+          <Ionicons name="trash" size={18} color="#FFF" />
+        </TouchableOpacity>
+      </Animated.View>
 
-      {/* Lists */}
-      {activeTab === 'all' ? (
-        <FlatList
-          data={incompleteTasks}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TaskSwipeRow task={item} onEdit={handleEdit} onDelete={deleteTask}>
-              <TaskCard
-                task={item}
-                onComplete={completeTask}
-                onEdit={handleEdit}
-                onDelete={deleteTask}
-              />
-            </TaskSwipeRow>
-          )}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>No tasks for this day</Text>
-              <Text style={styles.emptySubtext}>Tap + to add one</Text>
-            </View>
-          }
-        />
-      ) : (
-        <FlatList
-          data={completedTasks}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={tasks.length > 0 ? <WeeklyProgressCard /> : null}
-          renderItem={({ item }) => (
-            <TaskCard
-              task={item}
-              onComplete={completeTask}
-              onEdit={handleEdit}
-              onDelete={deleteTask}
-            />
-          )}
-          ListFooterComponent={
-            completedTasks.length > 0 ? <WorkloadDistribution tasks={completedTasks} /> : null
-          }
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>No completed tasks yet</Text>
-            </View>
-          }
-        />
-      )}
-
-      {/* Quick Add */}
-      <QuickAddBar selectedDate={selectedDate} onAdd={handleAddTask} />
-    </SafeAreaView>
+      <GestureDetector gesture={pan}>
+        <Animated.View style={cardStyle}>{children}</Animated.View>
+      </GestureDetector>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  header: {
+  wrapper: { overflow: 'hidden', marginBottom: 8 },
+  leftActions: {
+    ...StyleSheet.absoluteFillObject,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  heading: { fontSize: 28, fontWeight: 'bold', color: colors.textPrimary },
-  subheading: { fontSize: 15, color: colors.textSecondary, marginTop: 2 },
-  headerIcons: { flexDirection: 'row', gap: 4, marginTop: 4 },
-  iconBtn: { padding: 8, position: 'relative' },
-  notifDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.notificationBadge,
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
-  tabs: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-  },
-  tab: { marginRight: 24, paddingBottom: 10 },
-  tabRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tabText: { fontSize: 15, fontWeight: '500', color: colors.textSecondary },
-  tabTextActive: { color: colors.textPrimary, fontWeight: '700' },
-  tabUnderline: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: colors.primary,
-    borderRadius: 1,
-  },
-  countBadge: {
-    backgroundColor: '#E5E5EA',
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 1,
-  },
-  countBadgeText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
-  list: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 },
-  empty: { alignItems: 'center', paddingTop: 60 },
-  emptyText: { fontSize: 17, fontWeight: '600', color: colors.textSecondary },
-  emptySubtext: { fontSize: 14, color: colors.textMuted, marginTop: 6 },
-  progressCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: '#E8FAF0',
   },
-  progressLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  pctBadge: {
-    backgroundColor: colors.success,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  pctText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
-  progressFooter: {
+  rightActions: {
+    ...StyleSheet.absoluteFillObject,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    marginTop: 10,
+    backgroundColor: '#F2F3F7',
   },
-  tasksDoneLabel: { fontSize: 13, color: colors.textSecondary },
-  tasksDoneCount: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  actionBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  completeBtn: { backgroundColor: colors.success },
+  editBtn: { backgroundColor: colors.swipeEdit },
+  deleteBtn: { backgroundColor: colors.swipeDelete },
 });

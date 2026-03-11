@@ -15,6 +15,12 @@ import type { Task } from '@app-types/index';
 import { colors } from '@theme/colors';
 import CategoryBadge from '@components/ui/CategoryBadge';
 
+const PRIORITY_COLOR: Record<string, string> = {
+  low: '#34C759',
+  medium: '#FF9500',
+  high: '#FF3B30',
+};
+
 interface Props {
   task: Task;
   onComplete: (id: string) => void;
@@ -54,12 +60,28 @@ export default function TaskCard({ task, onComplete, onEdit, onDelete }: Props) 
   if (task.completed) {
     return (
       <View style={styles.completedCard}>
-        <Ionicons name="checkmark-circle" size={24} color={colors.primary} style={styles.check} />
-        <View style={styles.content}>
-          <Text style={styles.completedTitle}>{task.title}</Text>
-          <View style={styles.meta}>
-            <CategoryBadge category={task.category} />
-            <Text style={styles.time}>{task.time}</Text>
+        {/* Dark green left strip */}
+        <View style={styles.completedStrip}>
+          <Ionicons name="checkmark-circle" size={26} color="#FFF" />
+        </View>
+        {/* Light green content area */}
+        <View style={styles.completedContent}>
+          <TouchableOpacity onPress={handleComplete} activeOpacity={0.8}>
+            <Ionicons name="checkmark-circle" size={26} color={colors.primary} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.completedTitle}>{task.title}</Text>
+            <View style={styles.meta}>
+              <CategoryBadge category={task.category} />
+              {task.priority && (
+                <View style={[styles.priorityPill, { backgroundColor: `${PRIORITY_COLOR[task.priority]}20` }]}>
+                  <Text style={[styles.priorityPillText, { color: PRIORITY_COLOR[task.priority] }]}>
+                    {task.priority}
+                  </Text>
+                </View>
+              )}
+              <Text style={styles.completedTime}>{task.time}</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -75,11 +97,18 @@ export default function TaskCard({ task, onComplete, onEdit, onDelete }: Props) 
         <Text style={styles.title}>{task.title}</Text>
         <View style={styles.meta}>
           <CategoryBadge category={task.category} />
+          {task.priority && (
+            <View style={[styles.priorityPill, { backgroundColor: `${PRIORITY_COLOR[task.priority]}18` }]}>
+              <Text style={[styles.priorityPillText, { color: PRIORITY_COLOR[task.priority] }]}>
+                {task.priority}
+              </Text>
+            </View>
+          )}
           <Text style={styles.time}>{task.time}</Text>
         </View>
       </View>
       <TouchableOpacity onPress={handleMenu} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-        <Ionicons name="ellipsis-horizontal" size={20} color={colors.textMuted} />
+        <Ionicons name="ellipsis-vertical" size={20} color={colors.textMuted} />
       </TouchableOpacity>
     </View>
   );
@@ -89,18 +118,30 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: 16,
-    padding: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
   completedCard: {
-    backgroundColor: colors.success,
+    flexDirection: 'row',
     borderRadius: 16,
-    padding: 16,
+    overflow: 'hidden',
+    backgroundColor: '#E0F7EA',
+  },
+  completedStrip: {
+    width: 52,
+    backgroundColor: colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completedContent: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    gap: 10,
   },
   checkbox: {
     width: 22,
@@ -110,18 +151,26 @@ const styles = StyleSheet.create({
     borderColor: colors.textMuted,
     marginRight: 12,
   },
-  check: {
-    marginRight: 12,
-  },
   content: { flex: 1 },
   title: { fontSize: 17, fontWeight: '600', color: colors.textPrimary, marginBottom: 4 },
   completedTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textPrimary,
     textDecorationLine: 'line-through',
     marginBottom: 4,
   },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   time: { fontSize: 13, color: colors.textSecondary },
+  completedTime: { fontSize: 13, color: colors.textSecondary },
+  priorityPill: {
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  priorityPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
 });
