@@ -10,7 +10,7 @@ interface Props {
   badgeColor?: string;
 }
 
-// TODO (Phase 8): Full implementation with delta badges and color variants
+// Note (Phase 8): Add delta trend badges and color variants
 export default function MetricCard({ label, value, icon, badge, badgeColor }: Props) {
   return (
     <View style={styles.card}>

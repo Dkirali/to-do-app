@@ -1,24 +1,46 @@
 import { create } from 'zustand';
 import type { Goal } from '@app-types/index';
+import {
+  getGoalsByWeek,
+  insertGoal,
+  updateGoalProgress as dbUpdateGoalProgress,
+  deleteGoal as dbDeleteGoal,
+} from '@database/queries/goalQueries';
 
 interface GoalStore {
   goals: Goal[];
-  addGoal: (goal: Goal) => void;
+  loadGoals: (weekStart: string) => Promise<void>;
+  addGoal: (goal: Goal) => Promise<void>;
   updateGoal: (id: string, updates: Partial<Goal>) => void;
-  deleteGoal: (id: string) => void;
-  updateProgress: (id: string, increment: number) => void;
+  deleteGoal: (id: string) => Promise<void>;
+  updateProgress: (id: string, increment: number) => Promise<void>;
 }
 
-export const useGoalStore = create<GoalStore>((set) => ({
+export const useGoalStore = create<GoalStore>((set, get) => ({
   goals: [],
-  addGoal: (goal) => set((state) => ({ goals: [...state.goals, goal] })),
+  loadGoals: async (weekStart) => {
+    const goals = await getGoalsByWeek(weekStart);
+    set({ goals });
+  },
+  addGoal: async (goal) => {
+    await insertGoal(goal);
+    set((state) => ({ goals: [...state.goals, goal] }));
+  },
   updateGoal: (id, updates) =>
     set((state) => ({ goals: state.goals.map((g) => (g.id === id ? { ...g, ...updates } : g)) })),
-  deleteGoal: (id) => set((state) => ({ goals: state.goals.filter((g) => g.id !== id) })),
-  updateProgress: (id, increment) =>
+  deleteGoal: async (id) => {
+    await dbDeleteGoal(id);
+    set((state) => ({ goals: state.goals.filter((g) => g.id !== id) }));
+  },
+  updateProgress: async (id, increment) => {
+    const goal = get().goals.find((g) => g.id === id);
+    if (!goal) return;
+    const newValue = Math.min(goal.currentValue + increment, goal.targetValue);
+    await dbUpdateGoalProgress(id, newValue);
     set((state) => ({
       goals: state.goals.map((g) =>
-        g.id === id ? { ...g, currentValue: Math.min(g.currentValue + increment, g.targetValue) } : g
+        g.id === id ? { ...g, currentValue: newValue } : g
       ),
-    })),
+    }));
+  },
 }));
