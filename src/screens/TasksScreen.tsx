@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format, addMonths, subMonths } from 'date-fns';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTaskStore } from '@store/taskStore';
 import { colors } from '@theme/colors';
 import { getCompletionPercentage } from '@utils/progressHelpers';
 import WeekDayStrip from '@components/ui/WeekDayStrip';
 import ProgressBar from '@components/ui/ProgressBar';
+import ScreenHeader from '@components/ui/ScreenHeader';
+import MonthYearPicker from '@components/ui/MonthYearPicker';
 import TaskCard from '@components/tasks/TaskCard';
 import TaskSwipeRow from '@components/tasks/TaskSwipeRow';
 import WorkloadDistribution from '@components/tasks/WorkloadDistribution';
@@ -65,6 +68,16 @@ export default function TasksScreen() {
   } = useTaskStore();
 
   const [displayMonth, setDisplayMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [pickerVisible, setPickerVisible] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      const todayMonth = format(new Date(), 'yyyy-MM');
+      setSelectedDate(todayStr);
+      setDisplayMonth(todayMonth);
+    }, [])
+  );
 
   const dayTasks = tasks.filter((t) => t.date === selectedDate);
   const incompleteTasks = dayTasks.filter((t) => !t.completed);
@@ -87,6 +100,17 @@ export default function TasksScreen() {
     }
   }
 
+  function handlePickerSelect(month: string) {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todayMonth = format(new Date(), 'yyyy-MM');
+    setDisplayMonth(month);
+    if (month === todayMonth) {
+      setSelectedDate(todayStr);
+    } else {
+      setSelectedDate(format(new Date(`${month}-01T12:00:00`), 'yyyy-MM-01'));
+    }
+  }
+
   function handleEdit(task: Task) {
     setEditingTask(task);
   }
@@ -94,21 +118,13 @@ export default function TasksScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.heading}>{monthLabel}</Text>
-          <Text style={styles.subheading}>Weekly Planner</Text>
-        </View>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconPill}>
-            <Ionicons name="search" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconPill}>
-            <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ScreenHeader title={monthLabel} onTitlePress={() => setPickerVisible(true)} />
+      <MonthYearPicker
+        visible={pickerVisible}
+        currentMonth={displayMonth}
+        onSelect={handlePickerSelect}
+        onClose={() => setPickerVisible(false)}
+      />
 
       {/* Week strip with month nav arrows */}
       <View style={styles.stripRow}>
@@ -217,39 +233,6 @@ export default function TasksScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  heading: { fontSize: 28, fontWeight: 'bold', color: colors.textPrimary },
-  subheading: { fontSize: 15, color: colors.textSecondary, marginTop: 2 },
-  headerIcons: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  iconPill: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 10,
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  notifDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.notificationBadge,
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
   tabs: {
     flexDirection: 'row',
     paddingHorizontal: 20,
