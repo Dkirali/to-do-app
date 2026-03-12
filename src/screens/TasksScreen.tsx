@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format, addMonths, subMonths } from 'date-fns';
-import { generateUUID } from '@utils/uuid';
 import { useTaskStore } from '@store/taskStore';
 import { colors } from '@theme/colors';
 import { getCompletionPercentage } from '@utils/progressHelpers';
@@ -19,8 +18,7 @@ import TaskCard from '@components/tasks/TaskCard';
 import TaskSwipeRow from '@components/tasks/TaskSwipeRow';
 import WorkloadDistribution from '@components/tasks/WorkloadDistribution';
 import QuickAddBar from '@components/tasks/QuickAddBar';
-import EditTaskModal from '@components/tasks/EditTaskModal';
-import type { Task, Category } from '@app-types/index';
+import type { Task } from '@app-types/index';
 
 // ─── Weekly Progress Card ─────────────────────────────────────────────────────
 
@@ -61,14 +59,12 @@ export default function TasksScreen() {
     activeTab,
     setSelectedDate,
     setActiveTab,
-    addTask,
-    updateTask,
+    setEditingTask,
     deleteTask,
     completeTask,
   } = useTaskStore();
 
   const [displayMonth, setDisplayMonth] = useState(format(new Date(), 'yyyy-MM'));
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const dayTasks = tasks.filter((t) => t.date === selectedDate);
   const incompleteTasks = dayTasks.filter((t) => !t.completed);
@@ -89,28 +85,6 @@ export default function TasksScreen() {
     } else {
       setSelectedDate(format(newDate, 'yyyy-MM-01'));
     }
-  }
-
-  function handleAddTask(
-    title: string,
-    category: Category,
-    time: string,
-    date: string,
-    priority: 'low' | 'medium' | 'high',
-    description: string
-  ) {
-    const newTask: Task = {
-      id: generateUUID(),
-      title,
-      category,
-      time,
-      date,
-      completed: false,
-      createdAt: new Date().toISOString(),
-      priority,
-      description: description || undefined,
-    };
-    addTask(newTask);
   }
 
   function handleEdit(task: Task) {
@@ -204,6 +178,7 @@ export default function TasksScreen() {
             data={completedTasks}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
+            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={
               dayTasks.length > 0 ? (
@@ -235,15 +210,7 @@ export default function TasksScreen() {
       </View>
 
       {/* Quick Add */}
-      <QuickAddBar selectedDate={selectedDate} onAdd={handleAddTask} />
-
-      {/* Edit Task Modal */}
-      <EditTaskModal
-        task={editingTask}
-        visible={editingTask !== null}
-        onClose={() => setEditingTask(null)}
-        onUpdate={(id, updates) => { updateTask(id, updates); setEditingTask(null); }}
-      />
+      <QuickAddBar />
     </SafeAreaView>
   );
 }

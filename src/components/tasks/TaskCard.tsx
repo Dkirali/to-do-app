@@ -60,28 +60,19 @@ export default function TaskCard({ task, onComplete, onEdit, onDelete }: Props) 
   if (task.completed) {
     return (
       <View style={styles.completedCard}>
-        {/* Dark green left strip */}
-        <View style={styles.completedStrip}>
-          <Ionicons name="checkmark-circle" size={26} color="#FFF" />
-        </View>
-        {/* Light green content area */}
-        <View style={styles.completedContent}>
-          <TouchableOpacity onPress={handleComplete} activeOpacity={0.8}>
-            <Ionicons name="checkmark-circle" size={26} color={colors.primary} />
-          </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.completedTitle}>{task.title}</Text>
-            <View style={styles.meta}>
-              <CategoryBadge category={task.category} />
-              {task.priority && (
-                <View style={[styles.priorityPill, { backgroundColor: `${PRIORITY_COLOR[task.priority]}20` }]}>
-                  <Text style={[styles.priorityPillText, { color: PRIORITY_COLOR[task.priority] }]}>
-                    {task.priority}
-                  </Text>
-                </View>
-              )}
-              <Text style={styles.completedTime}>{task.time}</Text>
-            </View>
+        <Ionicons name="checkmark-circle" size={26} color={colors.success} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.completedTitle}>{task.title}</Text>
+          <View style={styles.meta}>
+            <CategoryBadge category={task.category} />
+            {task.priority && (
+              <View style={[styles.priorityPill, { backgroundColor: `${PRIORITY_COLOR[task.priority]}20` }]}>
+                <Text style={[styles.priorityPillText, { color: PRIORITY_COLOR[task.priority] }]}>
+                  {task.priority}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.completedTime}>{task.time}</Text>
           </View>
         </View>
       </View>
@@ -125,23 +116,12 @@ const styles = StyleSheet.create({
   },
   completedCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#E0F7EA',
-  },
-  completedStrip: {
-    width: 52,
-    backgroundColor: colors.success,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  completedContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 12,
-    gap: 10,
+    backgroundColor: '#E8F8EE',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   checkbox: {
     width: 22,

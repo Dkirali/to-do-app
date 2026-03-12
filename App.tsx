@@ -5,6 +5,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import RootNavigator from '@navigation/RootNavigator';
+import AddTaskSheet from '@components/tasks/AddTaskSheet';
+import EditTaskModal from '@components/tasks/EditTaskModal';
 import { runMigrations } from '@database/migrations';
 import { colors } from '@theme/colors';
 
@@ -33,6 +35,8 @@ export default function App() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar style="dark" />
         <RootNavigator />
+        <AddTaskSheet />
+        <EditTaskModal />
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );

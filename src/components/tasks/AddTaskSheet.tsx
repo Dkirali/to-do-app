@@ -14,7 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { format, isToday } from 'date-fns';
 import { colors, categoryColor } from '@theme/colors';
 import { useTaskStore } from '@store/taskStore';
-import type { Category } from '@app-types/index';
+import { generateUUID } from '@utils/uuid';
+import type { Category, Task } from '@app-types/index';
 
 const CATEGORIES: Category[] = ['general', 'gym', 'work', 'study', 'health'];
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -28,8 +29,8 @@ const CATEGORY_LABELS: Record<Category, string> = {
 type Priority = 'low' | 'medium' | 'high';
 const PRIORITIES: Priority[] = ['low', 'medium', 'high'];
 
-export default function EditTaskModal() {
-  const { editingTask, setEditingTask, updateTask } = useTaskStore();
+export default function AddTaskSheet() {
+  const { selectedDate, quickAddOpen, setQuickAddOpen, addTask } = useTaskStore();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(800)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -41,13 +42,14 @@ export default function EditTaskModal() {
   const [priority, setPriority] = useState<Priority>('medium');
   const [description, setDescription] = useState('');
 
+  const selectedDateObj = new Date(selectedDate + 'T12:00:00');
+  const dateLabel = format(selectedDateObj, 'MMM d');
+  const dueDateLabel = isToday(selectedDateObj)
+    ? `Today, ${time}`
+    : `${format(selectedDateObj, 'MMM d')}, ${time}`;
+
   useEffect(() => {
-    if (editingTask) {
-      setTitle(editingTask.title);
-      setCategory(editingTask.category);
-      setTime(editingTask.time);
-      setPriority(editingTask.priority ?? 'medium');
-      setDescription(editingTask.description ?? '');
+    if (quickAddOpen) {
       slideAnim.setValue(800);
       backdropAnim.setValue(0);
       setIsVisible(true);
@@ -56,7 +58,7 @@ export default function EditTaskModal() {
         Animated.timing(backdropAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
       ]).start();
     }
-  }, [editingTask]);
+  }, [quickAddOpen]);
 
   function handleClose() {
     Animated.parallel([
@@ -64,27 +66,35 @@ export default function EditTaskModal() {
       Animated.timing(backdropAnim, { toValue: 0, duration: 280, useNativeDriver: true }),
     ]).start(() => {
       setIsVisible(false);
-      setEditingTask(null);
+      setQuickAddOpen(false);
+      resetForm();
     });
   }
 
   function handleSubmit() {
-    if (!title.trim() || !editingTask) return;
-    updateTask(editingTask.id, {
+    if (!title.trim()) return;
+    const newTask: Task = {
+      id: generateUUID(),
       title: title.trim(),
       category,
       time,
+      date: selectedDate,
+      completed: false,
+      createdAt: new Date().toISOString(),
       priority,
       description: description.trim() || undefined,
-    });
+    };
+    addTask(newTask);
     handleClose();
   }
 
-  const dueDateLabel = editingTask
-    ? isToday(new Date(editingTask.date + 'T12:00:00'))
-      ? `Today, ${time}`
-      : `${format(new Date(editingTask.date + 'T12:00:00'), 'MMM d')}, ${time}`
-    : '';
+  function resetForm() {
+    setTitle('');
+    setCategory('general');
+    setTime('09:00 AM');
+    setPriority('medium');
+    setDescription('');
+  }
 
   if (!isVisible) return null;
 
@@ -173,11 +183,11 @@ export default function EditTaskModal() {
             />
 
             <TouchableOpacity
-              style={[styles.saveBtn, !title.trim() && styles.saveBtnDimmed]}
+              style={[styles.addBtn, !title.trim() && styles.addBtnDimmed]}
               onPress={handleSubmit}
               activeOpacity={0.8}
             >
-              <Text style={styles.saveBtnText}>Save Changes</Text>
+              <Text style={styles.addBtnText}>Add Task</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleClose}>
@@ -325,14 +335,14 @@ const styles = StyleSheet.create({
     minHeight: 80,
     marginBottom: 20,
   },
-  saveBtn: {
+  addBtn: {
     backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  saveBtnDimmed: { opacity: 0.45 },
-  saveBtnText: {
+  addBtnDimmed: { opacity: 0.45 },
+  addBtnText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFF',
