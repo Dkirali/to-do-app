@@ -1,27 +1,64 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { Reward } from '@app-types/index';
-import { colors } from '@theme/colors';
 
 interface Props {
   reward: Reward;
   goalsRemaining: number;
 }
 
-// TODO (Phase 6): Full implementation with dark blue card, decorative icon
 export default function UpcomingRewardBanner({ reward, goalsRemaining }: Props) {
   return (
-    <View style={styles.card}>
+    <View style={styles.wrapper}>
+      {/* Ghost decorative icon */}
+      <View style={styles.ghostIcon} pointerEvents="none">
+        <Ionicons
+          name={(reward.icon as keyof typeof Ionicons.glyphMap) || 'gift'}
+          size={110}
+          color="rgba(255,255,255,0.12)"
+        />
+      </View>
+
+      {/* Content */}
       <Text style={styles.label}>UPCOMING REWARD</Text>
       <Text style={styles.title}>{reward.title}</Text>
-      <Text style={styles.subtitle}>Complete {goalsRemaining} more goals to unlock</Text>
+      <Text style={styles.subtitle}>
+        Complete {goalsRemaining} more goal{goalsRemaining !== 1 ? 's' : ''} to unlock
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#1A3A6C', borderRadius: 16, padding: 20, marginTop: 8 },
-  label: { fontSize: 11, fontWeight: '700', color: '#90CAF9', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
-  title: { fontSize: 22, fontWeight: '700', color: '#FFF', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: '#B0C4DE' },
+  wrapper: {
+    backgroundColor: '#1A3A6C',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  ghostIcon: {
+    position: 'absolute',
+    right: -10,
+    bottom: -10,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#90CAF9',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#B0C4DE',
+  },
 });
