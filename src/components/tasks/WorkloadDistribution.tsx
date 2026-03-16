@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import type { Task, Category } from '@app-types/index';
-import { colors, categoryColor } from '@theme/colors';
+import type { Task, Category } from '@app-types';
+import { colors, categoryColor } from '@theme';
 import ProgressBar from '@components/ui/ProgressBar';
 import { getTaskCountByCategory } from '@utils/progressHelpers';
 

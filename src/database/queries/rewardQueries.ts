@@ -1,5 +1,5 @@
 import { getDatabase } from '../migrations';
-import type { Reward } from '@app-types/index';
+import type { Reward } from '@app-types';
 
 export async function getAllRewards(): Promise<Reward[]> {
   const db = await getDatabase();

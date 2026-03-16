@@ -1,5 +1,5 @@
 import { getDatabase } from '../migrations';
-import type { Goal } from '@app-types/index';
+import type { Goal } from '@app-types';
 
 export async function getAllGoals(): Promise<Goal[]> {
   const db = await getDatabase();

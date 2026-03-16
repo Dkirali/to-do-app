@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Reward } from '@app-types/index';
+import type { Reward } from '@app-types';
 import {
   getRewardsByWeek,
   insertReward,
@@ -10,6 +10,7 @@ import {
 
 interface RewardStore {
   rewards: Reward[];
+  isLoading: boolean;
   loadRewards: (weekStart: string) => Promise<void>;
   addReward: (reward: Reward) => Promise<void>;
   updateReward: (id: string, updates: Partial<Reward>) => void;
@@ -20,9 +21,15 @@ interface RewardStore {
 
 export const useRewardStore = create<RewardStore>((set, get) => ({
   rewards: [],
+  isLoading: false,
   loadRewards: async (weekStart) => {
-    const rewards = await getRewardsByWeek(weekStart);
-    set({ rewards });
+    set({ isLoading: true });
+    try {
+      const rewards = await getRewardsByWeek(weekStart);
+      set({ rewards });
+    } finally {
+      set({ isLoading: false });
+    }
   },
   addReward: async (reward) => {
     await insertReward(reward);

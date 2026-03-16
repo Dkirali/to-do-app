@@ -1,4 +1,4 @@
-import type { Goal, Task } from '@app-types/index';
+import type { Goal, Task } from '@app-types';
 
 export function getCompletionPercentage(tasks: Task[]): number {
   if (tasks.length === 0) return 0;

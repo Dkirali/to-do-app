@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { FullWindowOverlay } from 'react-native-screens';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@theme/colors';
+import { colors } from '@theme';
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr',

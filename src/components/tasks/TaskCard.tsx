@@ -5,15 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  ActionSheetIOS,
-  Platform,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import type { Task } from '@app-types/index';
-import { colors } from '@theme/colors';
+import type { Task } from '@app-types';
+import { colors } from '@theme';
 import CategoryBadge from '@components/ui/CategoryBadge';
+import { useContextMenu } from '@hooks';
 
 const PRIORITY_COLOR: Record<string, string> = {
   low: '#34C759',
@@ -30,6 +28,7 @@ interface Props {
 
 export default function TaskCard({ task, onComplete, onEdit, onDelete }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
+  const { show: showMenu } = useContextMenu(task, onEdit, onDelete);
 
   function handleComplete() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -37,24 +36,6 @@ export default function TaskCard({ task, onComplete, onEdit, onDelete }: Props) 
       Animated.timing(scale, { toValue: 1.25, duration: 120, useNativeDriver: true }),
       Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
     ]).start(() => onComplete(task.id));
-  }
-
-  function handleMenu() {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options: ['Cancel', 'Edit', 'Delete'], destructiveButtonIndex: 2, cancelButtonIndex: 0 },
-        (i) => {
-          if (i === 1) onEdit(task);
-          if (i === 2) onDelete(task.id);
-        }
-      );
-    } else {
-      Alert.alert('Options', '', [
-        { text: 'Edit', onPress: () => onEdit(task) },
-        { text: 'Delete', onPress: () => onDelete(task.id), style: 'destructive' },
-        { text: 'Cancel', style: 'cancel' },
-      ]);
-    }
   }
 
   if (task.completed) {
@@ -98,7 +79,7 @@ export default function TaskCard({ task, onComplete, onEdit, onDelete }: Props) 
           <Text style={styles.time}>{task.time}</Text>
         </View>
       </View>
-      <TouchableOpacity onPress={handleMenu} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+      <TouchableOpacity onPress={showMenu} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Task options" accessibilityRole="button">
         <Ionicons name="ellipsis-vertical" size={20} color={colors.textMuted} />
       </TouchableOpacity>
     </View>
@@ -118,7 +99,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,
-    backgroundColor: '#E8F8EE',
+    backgroundColor: colors.completedTaskBg,
     paddingVertical: 14,
     paddingHorizontal: 16,
     gap: 12,

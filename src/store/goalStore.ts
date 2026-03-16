@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Goal } from '@app-types/index';
+import type { Goal } from '@app-types';
 import {
   getGoalsByWeek,
   insertGoal,
@@ -9,6 +9,7 @@ import {
 
 interface GoalStore {
   goals: Goal[];
+  isLoading: boolean;
   loadGoals: (weekStart: string) => Promise<void>;
   addGoal: (goal: Goal) => Promise<void>;
   updateGoal: (id: string, updates: Partial<Goal>) => void;
@@ -18,9 +19,15 @@ interface GoalStore {
 
 export const useGoalStore = create<GoalStore>((set, get) => ({
   goals: [],
+  isLoading: false,
   loadGoals: async (weekStart) => {
-    const goals = await getGoalsByWeek(weekStart);
-    set({ goals });
+    set({ isLoading: true });
+    try {
+      const goals = await getGoalsByWeek(weekStart);
+      set({ goals });
+    } finally {
+      set({ isLoading: false });
+    }
   },
   addGoal: async (goal) => {
     await insertGoal(goal);

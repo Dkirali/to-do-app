@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { Reward } from '@app-types/index';
+import type { Reward } from '@app-types';
 
 interface Props {
   reward: Reward;

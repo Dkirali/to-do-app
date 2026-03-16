@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { Goal } from '@app-types/index';
-import { colors, categoryColor } from '@theme/colors';
+import type { Goal } from '@app-types';
+import { colors, categoryColor } from '@theme';
 import ProgressBar from '@components/ui/ProgressBar';
 
 interface Props {

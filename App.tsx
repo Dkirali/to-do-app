@@ -5,10 +5,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import RootNavigator from '@navigation/RootNavigator';
-import AddTaskSheet from '@components/tasks/AddTaskSheet';
-import EditTaskModal from '@components/tasks/EditTaskModal';
+import { AddTaskSheet, EditTaskModal } from '@components/tasks';
+import { ErrorBoundary } from '@components/ui';
 import { runMigrations } from '@database/migrations';
-import { colors } from '@theme/colors';
+import { colors } from '@theme';
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -31,13 +31,15 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <StatusBar style="dark" />
-        <RootNavigator />
-        <AddTaskSheet />
-        <EditTaskModal />
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <StatusBar style="dark" />
+          <RootNavigator />
+          <AddTaskSheet />
+          <EditTaskModal />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

@@ -6,11 +6,16 @@
     "paths": {
       "@components/*": ["src/components/*"],
       "@screens/*": ["src/screens/*"],
+      "@store": ["src/store/index.ts"],
       "@store/*": ["src/store/*"],
+      "@theme": ["src/theme/index.ts"],
       "@theme/*": ["src/theme/*"],
+      "@app-types": ["src/types/index.ts"],
       "@app-types/*": ["src/types/*"],
       "@utils/*": ["src/utils/*"],
+      "@hooks": ["src/hooks/index.ts"],
       "@hooks/*": ["src/hooks/*"],
+      "@config/*": ["src/config/*"],
       "@services/*": ["src/services/*"],
       "@database/*": ["src/database/*"],
       "@navigation/*": ["src/navigation/*"]

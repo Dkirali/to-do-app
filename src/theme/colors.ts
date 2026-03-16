@@ -45,6 +45,14 @@ export const colors = {
   // Swipe actions
   swipeEdit: '#007AFF',
   swipeDelete: '#FF3B30',
+  swipeCompleteBg: '#E8FAF0',
+  swipeActionBg: '#F2F3F7',
+
+  // Form / UI
+  border: '#E5E5EA',
+  inputBackground: '#F8F8F8',
+  completedTaskBg: '#E8F8EE',
+  primaryTint: '#E8F1FF',
 
   // Misc
   notificationBadge: '#FF3B30',

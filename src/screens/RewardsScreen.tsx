@@ -6,8 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
   format,
@@ -21,14 +22,12 @@ import {
   addDays,
 } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRewardStore } from '@store/rewardStore';
-import { useGoalStore } from '@store/goalStore';
-import { colors } from '@theme/colors';
-import ScreenHeader from '@components/ui/ScreenHeader';
-import MonthYearPicker from '@components/ui/MonthYearPicker';
-import UnlockedRewardCard from '@components/rewards/UnlockedRewardCard';
-import LockedRewardCard from '@components/rewards/LockedRewardCard';
-import type { Reward } from '@app-types/index';
+import { useShallow } from 'zustand/react/shallow';
+import { useRewardStore, useGoalStore } from '@store';
+import { colors } from '@theme';
+import { ScreenHeader, MonthYearPicker } from '@components/ui';
+import { UnlockedRewardCard, LockedRewardCard } from '@components/rewards';
+import type { Reward } from '@app-types';
 
 // ─── Dummy data (for UI testing — remove when DB is wired up) ─────────────────
 
@@ -123,8 +122,16 @@ const sectionStyles = StyleSheet.create({
 // ─── Rewards Screen ────────────────────────────────────────────────────────────
 
 export default function RewardsScreen() {
-  const { loadRewards, claimReward } = useRewardStore();
-  const { loadGoals } = useGoalStore();
+  const { loadRewards, claimReward, isLoading } = useRewardStore(
+    useShallow((state) => ({
+      loadRewards: state.loadRewards,
+      claimReward: state.claimReward,
+      isLoading: state.isLoading,
+    }))
+  );
+  const { loadGoals } = useGoalStore(
+    useShallow((state) => ({ loadGoals: state.loadGoals }))
+  );
 
   const [displayMonth, setDisplayMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [selectedWeekStart, setSelectedWeekStart] = useState(getCurrentWeekStart());
@@ -259,6 +266,7 @@ export default function RewardsScreen() {
       </View>
 
       {/* Content list */}
+      {isLoading && <ActivityIndicator style={{ marginVertical: 8 }} color={colors.primary} />}
       <FlatList<Reward>
         data={lockedRewards}
         keyExtractor={(item) => item.id}
@@ -346,7 +354,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   resetBadge: {
-    backgroundColor: '#E8F1FF',
+    backgroundColor: colors.primaryTint,
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import type { Category } from '@app-types/index';
-import { categoryColor } from '@theme/colors';
+import type { Category } from '@app-types';
+import { categoryColor } from '@theme';
 
 interface Props {
   category: Category;

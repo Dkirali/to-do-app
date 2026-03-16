@@ -1,27 +1,24 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { format, addMonths, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTaskStore } from '@store/taskStore';
-import { colors } from '@theme/colors';
+import { useShallow } from 'zustand/react/shallow';
+import { useTaskStore } from '@store';
+import { colors } from '@theme';
+import { useMonthNavigation } from '@hooks';
 import { getCompletionPercentage } from '@utils/progressHelpers';
-import WeekDayStrip from '@components/ui/WeekDayStrip';
-import ProgressBar from '@components/ui/ProgressBar';
-import ScreenHeader from '@components/ui/ScreenHeader';
-import MonthYearPicker from '@components/ui/MonthYearPicker';
-import TaskCard from '@components/tasks/TaskCard';
-import TaskSwipeRow from '@components/tasks/TaskSwipeRow';
-import WorkloadDistribution from '@components/tasks/WorkloadDistribution';
-import QuickAddBar from '@components/tasks/QuickAddBar';
-import type { Task } from '@app-types/index';
+import { WeekDayStrip, ProgressBar, ScreenHeader, MonthYearPicker } from '@components/ui';
+import { TaskCard, TaskSwipeRow, WorkloadDistribution, QuickAddBar } from '@components/tasks';
+import type { Task } from '@app-types';
 
 // ─── Weekly Progress Card ─────────────────────────────────────────────────────
 
@@ -60,15 +57,37 @@ export default function TasksScreen() {
     tasks,
     selectedDate,
     activeTab,
+    isLoading,
     setSelectedDate,
     setActiveTab,
     setEditingTask,
     deleteTask,
     completeTask,
-  } = useTaskStore();
+    loadTasks,
+  } = useTaskStore(
+    useShallow((state) => ({
+      tasks: state.tasks,
+      selectedDate: state.selectedDate,
+      activeTab: state.activeTab,
+      isLoading: state.isLoading,
+      setSelectedDate: state.setSelectedDate,
+      setActiveTab: state.setActiveTab,
+      setEditingTask: state.setEditingTask,
+      deleteTask: state.deleteTask,
+      completeTask: state.completeTask,
+      loadTasks: state.loadTasks,
+    }))
+  );
 
-  const [displayMonth, setDisplayMonth] = useState(format(new Date(), 'yyyy-MM'));
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const {
+    displayMonth,
+    setDisplayMonth,
+    pickerVisible,
+    setPickerVisible,
+    monthLabel,
+    changeMonth,
+    handlePickerSelect,
+  } = useMonthNavigation(setSelectedDate);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,44 +95,39 @@ export default function TasksScreen() {
       const todayMonth = format(new Date(), 'yyyy-MM');
       setSelectedDate(todayStr);
       setDisplayMonth(todayMonth);
-    }, [])
+    }, [setSelectedDate, setDisplayMonth])
   );
+
+  useEffect(() => {
+    loadTasks(selectedDate);
+  }, [selectedDate]);
 
   const dayTasks = tasks.filter((t) => t.date === selectedDate);
   const incompleteTasks = dayTasks.filter((t) => !t.completed);
   const completedTasks = dayTasks.filter((t) => t.completed);
   const completionPct = getCompletionPercentage(dayTasks);
 
-  const monthLabel = format(new Date(`${displayMonth}-01T12:00:00`), 'MMMM yyyy');
-
-  function changeMonth(direction: 1 | -1) {
-    const base = new Date(`${displayMonth}-01T12:00:00`);
-    const newDate = direction === 1 ? addMonths(base, 1) : subMonths(base, 1);
-    const newMonth = format(newDate, 'yyyy-MM');
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const todayMonth = format(new Date(), 'yyyy-MM');
-    setDisplayMonth(newMonth);
-    if (newMonth === todayMonth) {
-      setSelectedDate(todayStr);
-    } else {
-      setSelectedDate(format(newDate, 'yyyy-MM-01'));
-    }
-  }
-
-  function handlePickerSelect(month: string) {
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const todayMonth = format(new Date(), 'yyyy-MM');
-    setDisplayMonth(month);
-    if (month === todayMonth) {
-      setSelectedDate(todayStr);
-    } else {
-      setSelectedDate(format(new Date(`${month}-01T12:00:00`), 'yyyy-MM-01'));
-    }
-  }
-
-  function handleEdit(task: Task) {
+  const handleEdit = useCallback((task: Task) => {
     setEditingTask(task);
-  }
+  }, [setEditingTask]);
+
+  const handleComplete = useCallback((id: string) => {
+    completeTask(id);
+  }, [completeTask]);
+
+  const handleDelete = useCallback((id: string) => {
+    deleteTask(id);
+  }, [deleteTask]);
+
+  const renderIncompleteItem = useCallback(({ item }: { item: Task }) => (
+    <TaskSwipeRow task={item} onComplete={handleComplete} onEdit={handleEdit} onDelete={handleDelete}>
+      <TaskCard task={item} onComplete={handleComplete} onEdit={handleEdit} onDelete={handleDelete} />
+    </TaskSwipeRow>
+  ), [handleComplete, handleEdit, handleDelete]);
+
+  const renderCompletedItem = useCallback(({ item }: { item: Task }) => (
+    <TaskCard task={item} onComplete={handleComplete} onEdit={handleEdit} onDelete={handleDelete} />
+  ), [handleComplete, handleEdit, handleDelete]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -128,7 +142,12 @@ export default function TasksScreen() {
 
       {/* Week strip with month nav arrows */}
       <View style={styles.stripRow}>
-        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.stripArrow}>
+        <TouchableOpacity
+          onPress={() => changeMonth(-1)}
+          style={styles.stripArrow}
+          accessibilityLabel="Previous month"
+          accessibilityRole="button"
+        >
           <Ionicons name="chevron-back" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
         <WeekDayStrip
@@ -136,20 +155,35 @@ export default function TasksScreen() {
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
         />
-        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.stripArrow}>
+        <TouchableOpacity
+          onPress={() => changeMonth(1)}
+          style={styles.stripArrow}
+          accessibilityLabel="Next month"
+          accessibilityRole="button"
+        >
           <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('all')}>
+        <TouchableOpacity
+          style={styles.tab}
+          onPress={() => setActiveTab('all')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'all' }}
+        >
           <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
             All Tasks
           </Text>
           {activeTab === 'all' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('completed')}>
+        <TouchableOpacity
+          style={styles.tab}
+          onPress={() => setActiveTab('completed')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'completed' }}
+        >
           <View style={styles.tabRow}>
             <Text style={[styles.tabText, activeTab === 'completed' && styles.tabTextActive]}>
               Completed
@@ -166,22 +200,18 @@ export default function TasksScreen() {
 
       {/* Lists */}
       <View style={styles.listContainer}>
-        {activeTab === 'all' ? (
+        {isLoading ? (
+          <ActivityIndicator style={styles.loader} color={colors.primary} />
+        ) : activeTab === 'all' ? (
           <FlatList
             data={incompleteTasks}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <TaskSwipeRow task={item} onComplete={completeTask} onEdit={handleEdit} onDelete={deleteTask}>
-                <TaskCard
-                  task={item}
-                  onComplete={completeTask}
-                  onEdit={handleEdit}
-                  onDelete={deleteTask}
-                />
-              </TaskSwipeRow>
-            )}
+            removeClippedSubviews
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            renderItem={renderIncompleteItem}
             ListEmptyComponent={
               <View style={styles.empty}>
                 <Text style={styles.emptyText}>No tasks for this day</Text>
@@ -196,6 +226,9 @@ export default function TasksScreen() {
             contentContainerStyle={styles.list}
             ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
             showsVerticalScrollIndicator={false}
+            removeClippedSubviews
+            maxToRenderPerBatch={10}
+            windowSize={5}
             ListHeaderComponent={
               dayTasks.length > 0 ? (
                 <WeeklyProgressCard
@@ -205,14 +238,7 @@ export default function TasksScreen() {
                 />
               ) : null
             }
-            renderItem={({ item }) => (
-              <TaskCard
-                task={item}
-                onComplete={completeTask}
-                onEdit={handleEdit}
-                onDelete={deleteTask}
-              />
-            )}
+            renderItem={renderCompletedItem}
             ListFooterComponent={
               dayTasks.length > 0 ? <WorkloadDistribution tasks={dayTasks} /> : null
             }
@@ -239,7 +265,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    borderBottomColor: colors.border,
   },
   tab: { marginRight: 24, paddingBottom: 10 },
   tabRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -255,7 +281,7 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   countBadge: {
-    backgroundColor: '#E5E5EA',
+    backgroundColor: colors.border,
     borderRadius: 999,
     paddingHorizontal: 7,
     paddingVertical: 1,
@@ -265,6 +291,7 @@ const styles = StyleSheet.create({
   stripArrow: { padding: 8 },
   listContainer: { flex: 1 },
   list: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 },
+  loader: { marginTop: 40 },
   empty: { alignItems: 'center', paddingTop: 60 },
   emptyText: { fontSize: 17, fontWeight: '600', color: colors.textSecondary },
   emptySubtext: { fontSize: 14, color: colors.textMuted, marginTop: 6 },
@@ -301,7 +328,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
-  pctText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
+  pctText: { fontSize: 13, fontWeight: '700', color: colors.surface },
   tasksDoneLabel: { fontSize: 12, color: colors.textSecondary },
   tasksDoneCount: { fontSize: 18, fontWeight: '700', color: colors.primary },
 });

@@ -7,15 +7,17 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
+  Platform,
 } from 'react-native';
 import { FullWindowOverlay } from 'react-native-screens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, isToday } from 'date-fns';
-import { colors, categoryColor } from '@theme/colors';
-import { useTaskStore } from '@store/taskStore';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { colors, categoryColor } from '@theme';
+import { useTaskStore } from '@store';
 import { generateUUID } from '@utils/uuid';
-import type { Category, Task } from '@app-types/index';
+import type { Category, Task } from '@app-types';
 
 const CATEGORIES: Category[] = ['general', 'gym', 'work', 'study', 'health'];
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -29,6 +31,23 @@ const CATEGORY_LABELS: Record<Category, string> = {
 type Priority = 'low' | 'medium' | 'high';
 const PRIORITIES: Priority[] = ['low', 'medium', 'high'];
 
+function timeStringToDate(timeStr: string, dateStr: string): Date {
+  const base = new Date(`${dateStr}T12:00:00`);
+  const match = timeStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+  if (!match) return base;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const meridiem = match[3].toUpperCase();
+  if (meridiem === 'AM' && hours === 12) hours = 0;
+  if (meridiem === 'PM' && hours !== 12) hours += 12;
+  base.setHours(hours, minutes, 0, 0);
+  return base;
+}
+
+function dateToTimeString(date: Date): string {
+  return format(date, 'hh:mm aa').replace('am', 'AM').replace('pm', 'PM');
+}
+
 export default function AddTaskSheet() {
   const { selectedDate, quickAddOpen, setQuickAddOpen, addTask } = useTaskStore();
   const insets = useSafeAreaInsets();
@@ -39,17 +58,23 @@ export default function AddTaskSheet() {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<Category>('general');
   const [time, setTime] = useState('09:00 AM');
+  const [taskDate, setTaskDate] = useState(selectedDate);
   const [priority, setPriority] = useState<Priority>('medium');
   const [description, setDescription] = useState('');
 
-  const selectedDateObj = new Date(selectedDate + 'T12:00:00');
-  const dateLabel = format(selectedDateObj, 'MMM d');
-  const dueDateLabel = isToday(selectedDateObj)
+  // Picker state
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerDate, setPickerDate] = useState<Date>(new Date());
+  const [androidStep, setAndroidStep] = useState<'date' | 'time'>('date');
+
+  const taskDateObj = new Date(taskDate + 'T12:00:00');
+  const dueDateLabel = isToday(taskDateObj)
     ? `Today, ${time}`
-    : `${format(selectedDateObj, 'MMM d')}, ${time}`;
+    : `${format(taskDateObj, 'MMM d')}, ${time}`;
 
   useEffect(() => {
     if (quickAddOpen) {
+      setTaskDate(selectedDate);
       slideAnim.setValue(800);
       backdropAnim.setValue(0);
       setIsVisible(true);
@@ -78,7 +103,7 @@ export default function AddTaskSheet() {
       title: title.trim(),
       category,
       time,
-      date: selectedDate,
+      date: taskDate,
       completed: false,
       createdAt: new Date().toISOString(),
       priority,
@@ -92,8 +117,48 @@ export default function AddTaskSheet() {
     setTitle('');
     setCategory('general');
     setTime('09:00 AM');
+    setTaskDate(selectedDate);
     setPriority('medium');
     setDescription('');
+  }
+
+  function openPicker() {
+    const initial = timeStringToDate(time, taskDate);
+    setPickerDate(initial);
+    if (Platform.OS === 'android') {
+      setAndroidStep('date');
+    }
+    setPickerVisible(true);
+  }
+
+  function handleAndroidChange(_event: DateTimePickerEvent, selected?: Date) {
+    if (!selected) {
+      setPickerVisible(false);
+      return;
+    }
+    if (androidStep === 'date') {
+      const newDateStr = format(selected, 'yyyy-MM-dd');
+      setTaskDate(newDateStr);
+      // Keep time from previous pickerDate, apply to new date
+      const next = new Date(selected);
+      next.setHours(pickerDate.getHours(), pickerDate.getMinutes(), 0, 0);
+      setPickerDate(next);
+      setAndroidStep('time');
+    } else {
+      setTime(dateToTimeString(selected));
+      setPickerVisible(false);
+      setAndroidStep('date');
+    }
+  }
+
+  function handleIOSChange(_event: DateTimePickerEvent, selected?: Date) {
+    if (selected) setPickerDate(selected);
+  }
+
+  function confirmIOSPicker() {
+    setTaskDate(format(pickerDate, 'yyyy-MM-dd'));
+    setTime(dateToTimeString(pickerDate));
+    setPickerVisible(false);
   }
 
   if (!isVisible) return null;
@@ -124,7 +189,7 @@ export default function AddTaskSheet() {
               returnKeyType="done"
             />
 
-            <View style={styles.dueDateRow}>
+            <TouchableOpacity style={styles.dueDateRow} onPress={openPicker} activeOpacity={0.7}>
               <View style={styles.calIconContainer}>
                 <Ionicons name="calendar" size={18} color={colors.primary} />
               </View>
@@ -133,7 +198,36 @@ export default function AddTaskSheet() {
                 <Text style={styles.dueDateValue}>{dueDateLabel}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </View>
+            </TouchableOpacity>
+
+            {pickerVisible && Platform.OS === 'ios' && (
+              <View style={styles.inlinePicker}>
+                <View style={styles.inlinePickerHeader}>
+                  <TouchableOpacity onPress={() => setPickerVisible(false)}>
+                    <Text style={styles.iosPickerCancel}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={confirmIOSPicker}>
+                    <Text style={styles.iosPickerDone}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={pickerDate}
+                  mode="datetime"
+                  display="spinner"
+                  onChange={handleIOSChange}
+                  style={styles.iosPicker}
+                />
+              </View>
+            )}
+
+            {pickerVisible && Platform.OS === 'android' && (
+              <DateTimePicker
+                value={pickerDate}
+                mode={androidStep === 'date' ? 'date' : 'time'}
+                display="default"
+                onChange={handleAndroidChange}
+              />
+            )}
 
             <Text style={styles.sectionLabel}>CATEGORY</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
@@ -196,6 +290,7 @@ export default function AddTaskSheet() {
           </ScrollView>
         </Animated.View>
       </View>
+
     </FullWindowOverlay>
   );
 }
@@ -209,7 +304,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -220,7 +315,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E5E5EA',
+    backgroundColor: colors.border,
     alignSelf: 'center',
     marginBottom: 20,
   },
@@ -230,13 +325,13 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     paddingVertical: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    borderBottomColor: colors.border,
     marginBottom: 20,
   },
   dueDateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F8F8',
+    backgroundColor: colors.inputBackground,
     borderRadius: 14,
     padding: 14,
     marginBottom: 20,
@@ -279,8 +374,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1.5,
-    borderColor: '#E5E5EA',
-    backgroundColor: '#FFF',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   catChipSelected: {
     backgroundColor: colors.primary,
@@ -298,7 +393,7 @@ const styles = StyleSheet.create({
   },
   priorityContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F2F3F7',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 3,
     marginBottom: 20,
@@ -310,7 +405,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   prioritySelected: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -327,7 +422,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   descInput: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: colors.inputBackground,
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
@@ -356,5 +451,31 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+  inlinePicker: {
+    backgroundColor: colors.inputBackground,
+    borderRadius: 14,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  inlinePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  iosPickerCancel: {
+    fontSize: 15,
+    color: colors.textSecondary,
+  },
+  iosPickerDone: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  iosPicker: {
+    height: 200,
   },
 });
