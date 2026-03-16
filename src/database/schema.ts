@@ -7,7 +7,9 @@ export const CREATE_TABLES_SQL = `
     date TEXT NOT NULL,
     completed INTEGER DEFAULT 0,
     created_at TEXT NOT NULL,
-    completed_at TEXT
+    completed_at TEXT,
+    priority TEXT,
+    description TEXT
   );
 
   CREATE TABLE IF NOT EXISTS goals (

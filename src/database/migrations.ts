@@ -14,7 +14,24 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
 export async function runMigrations(): Promise<void> {
   const database = await getDatabase();
   await database.execAsync(CREATE_TABLES_SQL);
+  await applyColumnMigrations(database);
   await seedDemoData(database);
+}
+
+// ─── Column migrations (additive, safe to re-run) ─────────────────────────────
+
+async function applyColumnMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
+  const migrations = [
+    'ALTER TABLE tasks ADD COLUMN priority TEXT',
+    'ALTER TABLE tasks ADD COLUMN description TEXT',
+  ];
+  for (const sql of migrations) {
+    try {
+      await database.execAsync(sql);
+    } catch {
+      // Column already exists on fresh installs — safe to ignore
+    }
+  }
 }
 
 // ─── Seed demo goals + reward (only if goals table is empty) ─────────────────

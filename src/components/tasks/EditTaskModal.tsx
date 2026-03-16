@@ -68,9 +68,9 @@ export default function EditTaskModal() {
     });
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!title.trim() || !editingTask) return;
-    updateTask(editingTask.id, {
+    await updateTask(editingTask.id, {
       title: title.trim(),
       category,
       time,

@@ -16,8 +16,8 @@ export async function getTasksByDate(date: string): Promise<Task[]> {
 export async function insertTask(task: Task): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'INSERT INTO tasks (id, title, category, time, date, completed, created_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [task.id, task.title, task.category, task.time, task.date, task.completed ? 1 : 0, task.createdAt, task.completedAt ?? null]
+    'INSERT INTO tasks (id, title, category, time, date, completed, created_at, completed_at, priority, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [task.id, task.title, task.category, task.time, task.date, task.completed ? 1 : 0, task.createdAt, task.completedAt ?? null, task.priority ?? null, task.description ?? null]
   );
 }
 
@@ -45,6 +45,8 @@ function rowToTask(row: any): Task {
     completed: row.completed === 1,
     createdAt: row.created_at,
     completedAt: row.completed_at ?? undefined,
+    priority: row.priority ?? undefined,
+    description: row.description ?? undefined,
   };
 }
 
