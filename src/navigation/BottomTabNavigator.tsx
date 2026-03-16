@@ -6,8 +6,8 @@ import GoalsScreen from '@screens/GoalsScreen';
 import RewardsScreen from '@screens/RewardsScreen';
 import StatsScreen from '@screens/StatsScreen';
 import SettingsScreen from '@screens/SettingsScreen';
-import { colors } from '@theme/colors';
-import type { RootTabParamList } from '@app-types/index';
+import { colors } from '@theme';
+import type { RootTabParamList } from '@app-types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 

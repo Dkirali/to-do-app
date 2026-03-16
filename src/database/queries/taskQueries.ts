@@ -1,5 +1,5 @@
 import { getDatabase } from '../migrations';
-import type { Task } from '@app-types/index';
+import type { Task } from '@app-types';
 
 export async function getAllTasks(): Promise<Task[]> {
   const db = await getDatabase();

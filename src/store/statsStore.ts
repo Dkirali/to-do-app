@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { WeeklyStats } from '@app-types/index';
+import type { WeeklyStats } from '@app-types';
 import { getDatabase } from '@database/migrations';
 
 interface StatsStore {

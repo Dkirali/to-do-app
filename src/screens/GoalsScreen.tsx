@@ -10,16 +10,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { format, startOfWeek, addMonths, subMonths } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTaskStore } from '@store/taskStore';
-import { useGoalStore } from '@store/goalStore';
-import { useRewardStore } from '@store/rewardStore';
-import { colors } from '@theme/colors';
-import WeekDayStrip from '@components/ui/WeekDayStrip';
-import ScreenHeader from '@components/ui/ScreenHeader';
-import MonthYearPicker from '@components/ui/MonthYearPicker';
-import GoalCard from '@components/goals/GoalCard';
-import UpcomingRewardBanner from '@components/goals/UpcomingRewardBanner';
-import type { Goal } from '@app-types/index';
+import { useTaskStore, useGoalStore, useRewardStore } from '@store';
+import { colors } from '@theme';
+import { WeekDayStrip, ScreenHeader, MonthYearPicker } from '@components/ui';
+import { GoalCard } from '@components/goals';
+import { UpcomingRewardBanner } from '@components/rewards';
+import type { Goal } from '@app-types';
 
 export default function GoalsScreen() {
   const { selectedDate, setSelectedDate } = useTaskStore();

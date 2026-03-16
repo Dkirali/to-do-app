@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Reward } from '@app-types/index';
+import type { Reward } from '@app-types';
 import {
   getRewardsByWeek,
   insertReward,

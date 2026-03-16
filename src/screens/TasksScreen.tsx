@@ -10,18 +10,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { format, addMonths, subMonths } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTaskStore } from '@store/taskStore';
-import { colors } from '@theme/colors';
+import { useTaskStore } from '@store';
+import { colors } from '@theme';
 import { getCompletionPercentage } from '@utils/progressHelpers';
-import WeekDayStrip from '@components/ui/WeekDayStrip';
-import ProgressBar from '@components/ui/ProgressBar';
-import ScreenHeader from '@components/ui/ScreenHeader';
-import MonthYearPicker from '@components/ui/MonthYearPicker';
-import TaskCard from '@components/tasks/TaskCard';
-import TaskSwipeRow from '@components/tasks/TaskSwipeRow';
-import WorkloadDistribution from '@components/tasks/WorkloadDistribution';
-import QuickAddBar from '@components/tasks/QuickAddBar';
-import type { Task } from '@app-types/index';
+import { WeekDayStrip, ProgressBar, ScreenHeader, MonthYearPicker } from '@components/ui';
+import { TaskCard, TaskSwipeRow, WorkloadDistribution, QuickAddBar } from '@components/tasks';
+import type { Task } from '@app-types';
 
 // ─── Weekly Progress Card ─────────────────────────────────────────────────────
 

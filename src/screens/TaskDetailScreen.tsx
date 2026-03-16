@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '@theme/colors';
+import { colors } from '@theme';
 
 // TODO (Phase 5): Full task detail / edit form
 export default function TaskDetailScreen() {

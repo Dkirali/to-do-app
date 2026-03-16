@@ -8,8 +8,8 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
-import { colors } from '@theme/colors';
-import type { Task } from '@app-types/index';
+import { colors } from '@theme';
+import type { Task } from '@app-types';
 
 interface Props {
   task: Task;

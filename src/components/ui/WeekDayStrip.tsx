@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { format, eachDayOfInterval, getDaysInMonth, isSameDay } from 'date-fns';
-import { colors } from '@theme/colors';
+import { colors } from '@theme';
 
 const DAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 

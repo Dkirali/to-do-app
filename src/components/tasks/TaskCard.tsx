@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import type { Task } from '@app-types/index';
-import { colors } from '@theme/colors';
+import type { Task } from '@app-types';
+import { colors } from '@theme';
 import CategoryBadge from '@components/ui/CategoryBadge';
 
 const PRIORITY_COLOR: Record<string, string> = {

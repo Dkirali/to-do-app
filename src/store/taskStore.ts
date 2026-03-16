@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task } from '@app-types/index';
+import type { Task } from '@app-types';
 import { format } from 'date-fns';
 import {
   getTasksByDate,

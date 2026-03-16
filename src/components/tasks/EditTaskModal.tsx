@@ -12,9 +12,9 @@ import { FullWindowOverlay } from 'react-native-screens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, isToday } from 'date-fns';
-import { colors, categoryColor } from '@theme/colors';
-import { useTaskStore } from '@store/taskStore';
-import type { Category } from '@app-types/index';
+import { colors, categoryColor } from '@theme';
+import { useTaskStore } from '@store';
+import type { Category } from '@app-types';
 
 const CATEGORIES: Category[] = ['general', 'gym', 'work', 'study', 'health'];
 const CATEGORY_LABELS: Record<Category, string> = {

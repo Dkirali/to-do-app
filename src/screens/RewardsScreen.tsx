@@ -21,14 +21,11 @@ import {
   addDays,
 } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRewardStore } from '@store/rewardStore';
-import { useGoalStore } from '@store/goalStore';
-import { colors } from '@theme/colors';
-import ScreenHeader from '@components/ui/ScreenHeader';
-import MonthYearPicker from '@components/ui/MonthYearPicker';
-import UnlockedRewardCard from '@components/rewards/UnlockedRewardCard';
-import LockedRewardCard from '@components/rewards/LockedRewardCard';
-import type { Reward } from '@app-types/index';
+import { useRewardStore, useGoalStore } from '@store';
+import { colors } from '@theme';
+import { ScreenHeader, MonthYearPicker } from '@components/ui';
+import { UnlockedRewardCard, LockedRewardCard } from '@components/rewards';
+import type { Reward } from '@app-types';
 
 // ─── Dummy data (for UI testing — remove when DB is wired up) ─────────────────
 

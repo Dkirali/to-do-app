@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Goal } from '@app-types/index';
+import type { Goal } from '@app-types';
 import {
   getGoalsByWeek,
   insertGoal,
