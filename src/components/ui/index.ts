@@ -1,4 +1,5 @@
 export { default as CategoryBadge } from './CategoryBadge';
+export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as MonthYearPicker } from './MonthYearPicker';
 export { default as ProgressBar } from './ProgressBar';
 export { default as ScreenHeader } from './ScreenHeader';

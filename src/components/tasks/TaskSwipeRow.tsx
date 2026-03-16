@@ -9,6 +9,12 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { colors } from '@theme';
+import {
+  SWIPE_MAX_RIGHT,
+  SWIPE_COMPLETE_THRESHOLD,
+  SWIPE_REVEAL_THRESHOLD,
+  SWIPE_DELETE_THRESHOLD,
+} from '@config/swipe';
 import type { Task } from '@app-types';
 
 interface Props {
@@ -19,30 +25,25 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-const MAX_RIGHT = 80;          // reveal complete button (right swipe)
-const COMPLETE_THRESHOLD = 60; // snap to complete reveal
-const REVEAL_THRESHOLD = -160; // reveal both edit + delete (left swipe)
-const DELETE_THRESHOLD = -250; // auto-delete on extreme left swipe
-
 export default function TaskSwipeRow({ task, children, onComplete, onEdit, onDelete }: Props) {
   const translateX = useSharedValue(0);
 
   const pan = Gesture.Pan()
     .activeOffsetX([-10, 10])
     .onUpdate((e) => {
-      translateX.value = Math.max(REVEAL_THRESHOLD, Math.min(MAX_RIGHT, e.translationX));
+      translateX.value = Math.max(SWIPE_REVEAL_THRESHOLD, Math.min(SWIPE_MAX_RIGHT, e.translationX));
     })
     .onEnd((e) => {
-      if (e.translationX < DELETE_THRESHOLD) {
+      if (e.translationX < SWIPE_DELETE_THRESHOLD) {
         // Extreme left swipe → auto-delete
         translateX.value = withSpring(0);
         runOnJS(onDelete)(task.id);
-      } else if (e.translationX < REVEAL_THRESHOLD) {
+      } else if (e.translationX < SWIPE_REVEAL_THRESHOLD) {
         // Left swipe past threshold → snap to reveal both buttons
-        translateX.value = withSpring(REVEAL_THRESHOLD);
-      } else if (e.translationX > COMPLETE_THRESHOLD) {
+        translateX.value = withSpring(SWIPE_REVEAL_THRESHOLD);
+      } else if (e.translationX > SWIPE_COMPLETE_THRESHOLD) {
         // Right swipe past threshold → snap to reveal complete button
-        translateX.value = withSpring(MAX_RIGHT);
+        translateX.value = withSpring(SWIPE_MAX_RIGHT);
       } else {
         // Short swipe → snap back
         translateX.value = withSpring(0);
@@ -109,14 +110,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#E8FAF0',
+    backgroundColor: colors.swipeCompleteBg,
   },
   rightActions: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    backgroundColor: '#F2F3F7',
+    backgroundColor: colors.swipeActionBg,
   },
   actionBtn: {
     width: 56,

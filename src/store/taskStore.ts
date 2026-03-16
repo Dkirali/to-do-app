@@ -14,6 +14,7 @@ interface TaskStore {
   activeTab: 'all' | 'completed';
   quickAddOpen: boolean;
   editingTask: Task | null;
+  isLoading: boolean;
   setSelectedDate: (date: string) => void;
   setActiveTab: (tab: 'all' | 'completed') => void;
   setQuickAddOpen: (v: boolean) => void;
@@ -31,13 +32,19 @@ export const useTaskStore = create<TaskStore>((set) => ({
   activeTab: 'all',
   quickAddOpen: false,
   editingTask: null,
+  isLoading: false,
   setSelectedDate: (date) => set({ selectedDate: date }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   setQuickAddOpen: (v) => set({ quickAddOpen: v }),
   setEditingTask: (task) => set({ editingTask: task }),
   loadTasks: async (date) => {
-    const tasks = await getTasksByDate(date);
-    set({ tasks });
+    set({ isLoading: true });
+    try {
+      const tasks = await getTasksByDate(date);
+      set({ tasks });
+    } finally {
+      set({ isLoading: false });
+    }
   },
   addTask: async (task) => {
     await insertTask(task);
