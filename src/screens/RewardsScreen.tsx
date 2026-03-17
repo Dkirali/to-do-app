@@ -226,33 +226,33 @@ export default function RewardsScreen() {
         onClose={() => setPickerVisible(false)}
       />
 
-      {/* Week strip with month arrows — matches Tasks/Goals stripRow pattern */}
-      <View style={styles.stripRow}>
-        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.stripArrow} activeOpacity={0.7}>
+      {/* Week card selector — matches Stats screen */}
+      <View style={styles.weekRow}>
+        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.arrow} activeOpacity={0.7}>
           <Ionicons name="chevron-back" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.weekStrip}
+          contentContainerStyle={styles.weekScroll}
         >
-          {weeks.map((w) => {
+          {weeks.map((w, i) => {
             const isActive = w.weekStart === selectedWeekStart;
             return (
               <TouchableOpacity
                 key={w.weekStart}
-                style={[styles.weekPill, isActive && styles.weekPillActive]}
+                style={[styles.weekCard, isActive && styles.weekCardActive]}
                 onPress={() => setSelectedWeekStart(w.weekStart)}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.weekPillText, isActive && styles.weekPillTextActive]}>
-                  {w.label}
-                </Text>
+                <Text style={[styles.weekLabel, isActive && styles.weekLabelActive]}>WEEK</Text>
+                <Text style={[styles.weekNum, isActive && styles.weekNumActive]}>{i + 1}</Text>
+                {isActive && <View style={styles.weekDot} />}
               </TouchableOpacity>
             );
           })}
         </ScrollView>
-        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.stripArrow} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.arrow} activeOpacity={0.7}>
           <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
@@ -301,42 +301,60 @@ export default function RewardsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
 
-  // Week strip row — identical pattern to Tasks/Goals
-  stripRow: {
+  // Week card strip — matches Stats screen
+  weekRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 4,
-    marginBottom: 4,
+    paddingVertical: 6,
   },
-  stripArrow: { padding: 8 },
-  weekStrip: {
+  arrow: { padding: 8 },
+  weekScroll: {
     paddingHorizontal: 8,
     gap: 8,
     alignItems: 'center',
   },
-  weekPill: {
-    height: 44,
-    paddingHorizontal: 20,
-    borderRadius: 22,
+  weekCard: {
+    width: 68,
+    height: 60,
+    borderRadius: 14,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
-  weekPillActive: {
+  weekCardActive: {
     backgroundColor: colors.primary,
+    width: 74,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  weekPillText: {
-    fontSize: 14,
-    fontWeight: '600',
+  weekLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.8,
     color: colors.textSecondary,
+    textTransform: 'uppercase',
   },
-  weekPillTextActive: {
-    color: '#FFF',
+  weekLabelActive: { color: 'rgba(255,255,255,0.75)' },
+  weekNum: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    lineHeight: 22,
+  },
+  weekNumActive: { fontSize: 20, color: '#FFF' },
+  weekDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#FFF',
+    marginTop: 3,
   },
 
   // Title row

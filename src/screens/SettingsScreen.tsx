@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '@theme';
+import { colors, typography } from '@theme';
 
 export default function SettingsScreen() {
   return (
@@ -12,5 +12,5 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  text: { fontSize: 22, fontWeight: '600', color: colors.textPrimary },
+  text: { ...typography.heading2, color: colors.textPrimary },
 });

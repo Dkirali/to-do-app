@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { Task, Category } from '@app-types';
-import { colors, categoryColor } from '@theme';
+import { colors, categoryColor, typography } from '@theme';
 import ProgressBar from '@components/ui/ProgressBar';
 import { getTaskCountByCategory } from '@utils/progressHelpers';
 
@@ -50,11 +50,8 @@ export default function WorkloadDistribution({ tasks }: Props) {
 const styles = StyleSheet.create({
   container: { marginTop: 16, marginBottom: 8 },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...typography.badge,
     color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
     marginBottom: 10,
   },
   cards: {
@@ -74,6 +71,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  catName: { fontSize: 13, fontWeight: '600' },
-  count: { fontSize: 13, fontWeight: '700', color: colors.textPrimary },
+  catName: { ...typography.caption, fontWeight: '600' },
+  count: { ...typography.caption, fontWeight: '700', color: colors.textPrimary },
 });

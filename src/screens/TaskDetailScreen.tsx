@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '@theme';
+import { colors, typography } from '@theme';
 
 // TODO: Full task detail / edit form (planned for a future phase)
 export default function TaskDetailScreen() {
@@ -13,5 +13,5 @@ export default function TaskDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  text: { fontSize: 22, fontWeight: '600', color: colors.textPrimary },
+  text: { ...typography.heading2, color: colors.textPrimary },
 });

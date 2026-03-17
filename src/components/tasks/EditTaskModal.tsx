@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, isToday } from 'date-fns';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { colors, categoryColor } from '@theme';
+import { colors, categoryColor, typography } from '@theme';
 import { useTaskStore } from '@store';
 import type { Category } from '@app-types';
 
@@ -295,8 +295,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   titleInput: {
-    fontSize: 20,
-    fontWeight: '600',
+    ...typography.heading3,
     color: colors.textPrimary,
     paddingVertical: 4,
     borderBottomWidth: 1,
@@ -321,7 +320,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   dueDateLabel: {
-    fontSize: 10,
+    ...typography.micro,
     fontWeight: '700',
     color: colors.textSecondary,
     textTransform: 'uppercase',
@@ -329,12 +328,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   dueDateValue: {
-    fontSize: 15,
+    ...typography.body,
     fontWeight: '600',
     color: colors.textPrimary,
   },
   sectionLabel: {
-    fontSize: 12,
+    ...typography.captionSmall,
     fontWeight: '700',
     color: colors.textSecondary,
     textTransform: 'uppercase',
@@ -363,7 +362,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   catChipText: {
-    fontSize: 14,
+    ...typography.bodySmall,
     fontWeight: '600',
   },
   priorityContainer: {
@@ -388,7 +387,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   priorityText: {
-    fontSize: 14,
+    ...typography.bodySmall,
     fontWeight: '500',
     color: colors.textSecondary,
   },
@@ -400,7 +399,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.inputBackground,
     borderRadius: 12,
     padding: 14,
-    fontSize: 15,
+    ...typography.body,
     color: colors.textPrimary,
     minHeight: 80,
     marginBottom: 20,
@@ -413,7 +412,7 @@ const styles = StyleSheet.create({
   },
   saveBtnDimmed: { opacity: 0.45 },
   saveBtnText: {
-    fontSize: 16,
+    ...typography.heading4,
     fontWeight: '700',
     color: '#FFF',
   },
@@ -421,7 +420,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 14,
     marginBottom: 4,
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
@@ -442,11 +441,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   iosPickerCancel: {
-    fontSize: 15,
+    ...typography.body,
     color: colors.textSecondary,
   },
   iosPickerDone: {
-    fontSize: 15,
+    ...typography.body,
     fontWeight: '600',
     color: colors.primary,
   },

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { FullWindowOverlay } from 'react-native-screens';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@theme';
+import { colors, typography } from '@theme';
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr',
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   yearLabel: {
-    fontSize: 22,
+    ...typography.heading2,
     fontWeight: '700',
     color: colors.textPrimary,
   },
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   monthText: {
-    fontSize: 15,
+    ...typography.body,
     fontWeight: '600',
     color: colors.textPrimary,
   },

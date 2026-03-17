@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Reward } from '@app-types';
+import { typography } from '@theme';
 
 interface Props {
   reward: Reward;
@@ -44,21 +45,18 @@ const styles = StyleSheet.create({
     bottom: -10,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...typography.badge,
     color: '#90CAF9',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
     marginBottom: 6,
   },
   title: {
-    fontSize: 22,
+    ...typography.heading2,
     fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 13,
+    ...typography.caption,
     color: '#B0C4DE',
   },
 });

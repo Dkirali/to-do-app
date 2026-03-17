@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  stripRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
+  stripRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, paddingVertical: 6 },
   stripArrow: { padding: 8 },
   loader: { marginTop: 40 },
   list: {

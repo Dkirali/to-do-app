@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Reward } from '@app-types';
-import { colors } from '@theme';
+import { colors, typography } from '@theme';
 
 interface Props {
   reward: Reward;
@@ -92,13 +92,13 @@ const styles = StyleSheet.create({
   icon: { fontSize: 26 },
   content: { flex: 1 },
   title: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...typography.body,
+    fontWeight: '700',
     color: '#FFF',
     letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 13,
+    ...typography.caption,
     color: 'rgba(255,255,255,0.85)',
     marginTop: 3,
   },
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   claimText: {
-    fontSize: 14,
+    ...typography.bodySmall,
     fontWeight: '700',
     color: GOLD,
   },
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   claimedText: {
-    fontSize: 12,
+    ...typography.captionSmall,
     fontWeight: '600',
     color: '#FFF',
   },
