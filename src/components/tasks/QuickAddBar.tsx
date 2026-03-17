@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
-import { colors } from '@theme';
+import { colors, typography } from '@theme';
 import { useTaskStore } from '@store';
 
 export default function QuickAddBar() {
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   barIcon: { marginRight: 8 },
-  placeholder: { flex: 1, fontSize: 15, color: colors.textMuted },
+  placeholder: { flex: 1, ...typography.body, color: colors.textMuted },
   addButton: {
     backgroundColor: colors.primary,
     borderRadius: 999,

@@ -71,12 +71,12 @@ export default function WeekDayStrip({ displayMonth, selectedDate, onSelectDate 
 }
 
 const styles = StyleSheet.create({
-  strip: { height: 80 },
+  strip: { height: 60 },
   container: { paddingHorizontal: 8, gap: CELL_GAP, alignItems: 'flex-start' },
   dayCell: {
     width: CELL_WIDTH,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: 12,
     backgroundColor: colors.surface,
   },

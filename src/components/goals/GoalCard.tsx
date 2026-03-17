@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Goal } from '@app-types';
-import { colors, categoryColor } from '@theme';
+import { colors, categoryColor, typography } from '@theme';
 import ProgressBar from '@components/ui/ProgressBar';
 
 interface Props {
@@ -104,18 +104,15 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   title: {
-    fontSize: 16,
+    ...typography.heading4,
     fontWeight: '700',
     color: colors.textPrimary,
   },
   categoryLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...typography.badge,
   },
   pct: {
-    fontSize: 17,
+    ...typography.bodyLarge,
     fontWeight: '700',
   },
   bottomRow: {
@@ -133,11 +130,11 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   metaText: {
-    fontSize: 13,
+    ...typography.caption,
     color: colors.textSecondary,
   },
   count: {
-    fontSize: 15,
+    ...typography.body,
     fontWeight: '700',
     color: colors.textPrimary,
   },

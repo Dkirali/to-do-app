@@ -9,7 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import type { Task } from '@app-types';
-import { colors } from '@theme';
+import { colors, typography } from '@theme';
 import CategoryBadge from '@components/ui/CategoryBadge';
 import { useContextMenu } from '@hooks';
 
@@ -113,24 +113,23 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   content: { flex: 1 },
-  title: { fontSize: 17, fontWeight: '600', color: colors.textPrimary, marginBottom: 4 },
+  title: { ...typography.bodyLarge, fontWeight: '600', color: colors.textPrimary, marginBottom: 4 },
   completedTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...typography.heading4,
     color: colors.textPrimary,
     textDecorationLine: 'line-through',
     marginBottom: 4,
   },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  time: { fontSize: 13, color: colors.textSecondary },
-  completedTime: { fontSize: 13, color: colors.textSecondary },
+  time: { ...typography.caption, color: colors.textSecondary },
+  completedTime: { ...typography.caption, color: colors.textSecondary },
   priorityPill: {
     borderRadius: 999,
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
   priorityPillText: {
-    fontSize: 11,
+    ...typography.badge,
     fontWeight: '600',
     textTransform: 'capitalize',
   },

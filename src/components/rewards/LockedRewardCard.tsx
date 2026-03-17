@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Reward } from '@app-types';
-import { colors } from '@theme';
+import { colors, typography } from '@theme';
 import ProgressBar from '@components/ui/ProgressBar';
 
 interface Props {
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
   },
   titleBlock: { flex: 1 },
   title: {
-    fontSize: 16,
+    ...typography.heading4,
     fontWeight: '700',
     color: '#FFF',
   },
   subtitle: {
-    fontSize: 13,
+    ...typography.caption,
     color: 'rgba(255,255,255,0.75)',
     marginTop: 3,
   },
@@ -106,11 +106,8 @@ const styles = StyleSheet.create({
   },
   progressSection: { gap: 6 },
   progressLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...typography.badge,
     color: 'rgba(255,255,255,0.6)',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   progressRow: {
     flexDirection: 'row',
@@ -119,13 +116,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   progressCount: {
-    fontSize: 18,
+    ...typography.heading3,
     fontWeight: '700',
     color: '#FFF',
   },
   progressUnit: {
-    fontSize: 14,
-    fontWeight: '400',
+    ...typography.bodySmall,
     color: 'rgba(255,255,255,0.8)',
   },
   remainingBadge: {
@@ -135,7 +131,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   remainingText: {
-    fontSize: 12,
+    ...typography.captionSmall,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.9)',
   },

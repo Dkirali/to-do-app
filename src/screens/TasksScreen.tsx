@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   countBadgeText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
-  stripRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
+  stripRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, paddingVertical: 6 },
   stripArrow: { padding: 8 },
   listContainer: { flex: 1 },
   list: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 },
